@@ -1,6 +1,12 @@
 # Interns create / clone these alongside the cloned guide repo.
 # They're each intern's own working state — not part of the guide itself.
-/my-alphas/
+# Exception: two starter alpha files ship with the guide so the Jupyter file
+# browser already has runnable examples (target_weight + order_book) when the
+# container boots. Interns edit them freely; they typically don't push back
+# to this repo, so tracking just means `git pull` can deliver upstream tweaks.
+/my-alphas/*
+!/my-alphas/my_first_alpha.py
+!/my-alphas/my_first_order_book_alpha.py
 /njt-submissions/
 
 # Common

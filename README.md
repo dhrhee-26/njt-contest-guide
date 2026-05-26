@@ -28,14 +28,12 @@ Prerequisite: **Docker Desktop** (https://www.docker.com/products/docker-desktop
 
 ```bash
 # 1.1 Clone this guide repo into ~/njt-contest.
-#     It contains docker-compose.yml, all the docs, and the templates.
+#     It contains docker-compose.yml, the docs, the templates, and a
+#     ready-to-run starter at my-alphas/my_first_alpha.py.
 git clone https://github.com/dhrhee-26/njt-contest-guide.git ~/njt-contest
 cd ~/njt-contest
 
-# 1.2 Your alpha workspace (becomes Jupyter Lab's root)
-mkdir my-alphas
-
-# 1.3 Clone the submissions repo + switch to your branch
+# 1.2 Clone the submissions repo + switch to your branch
 git clone https://github.com/dhrhee-26/njt-submissions.git
 cd njt-submissions
 git checkout interns/<your-name>           # admin creates this branch ahead of time
@@ -47,13 +45,15 @@ cd ..
 Resulting folder layout:
 
 ```
-~/njt-contest/                  ← cloned from njt-contest-guide
-├── docker-compose.yml          ← container config (image, ports, mounts)
-├── README.md / setup.md / ...  ← these guide docs
-├── templates/                  ← starter alpha files
-├── my-alphas/                  ← your alpha files (mounted into the container as /workspace)
-└── njt-submissions/            ← cloned submissions repo (mounted as /submissions)
-    └── interns/<your-name>/    ← your submissions accumulate here
+~/njt-contest/                                  ← cloned from njt-contest-guide
+├── docker-compose.yml                          ← container config (image, ports, mounts)
+├── README.md / setup.md / ...                  ← these guide docs
+├── templates/                                  ← reference template alphas
+├── my-alphas/                                  ← your alpha files (mounted into the container as /workspace)
+│   ├── my_first_alpha.py                       ← target_weight starter (cross-sectional, 2 assets)
+│   └── my_first_order_book_alpha.py            ← order_book starter (event-driven, single asset)
+└── njt-submissions/                            ← cloned submissions repo (mounted as /submissions)
+    └── interns/<your-name>/                    ← your submissions accumulate here
 ```
 
 ---
@@ -84,22 +84,18 @@ Next day: `cd ~/njt-contest && docker compose up -d` and you're back.
 
 ## 3. First alpha — single-file pattern
 
-In Jupyter Lab (http://localhost:8888), the left sidebar shows `my-alphas/`. Work happens there.
+In Jupyter Lab (http://localhost:8888), the left sidebar already shows two runnable starters shipped with the guide:
 
-### 3.1 Grab a template
+| File | Kind | Default signal | Good fit for |
+|---|---|---|---|
+| `my_first_alpha.py` | `target_weight` | 10-day cross-sectional momentum on BTC + ETH, long top half / short bottom half | continuous portfolio reweights, cross-sectional ideas |
+| `my_first_order_book_alpha.py` | `order_book` | SMA(5/20) crossover on BTC (state machine) | discrete entry/exit decisions, event-driven ideas |
 
-From your **host terminal** (not Jupyter):
+Pick whichever style fits your idea and edit it. The walkthrough below uses `my_first_alpha.py`; the order_book file behaves the same way (open, edit signal, Shift+Enter to backtest, optional submit block at the bottom).
 
-```bash
-cp ~/njt-contest/templates/target_weight_template.py ~/njt-contest/my-alphas/my_alpha.py
-# (For an event-driven alpha later, use templates/order_book_template.py.)
-```
+### 3.1 Change one signal line
 
-Refresh the Jupyter Lab browser tab and `my_alpha.py` appears in the left sidebar.
-
-### 3.2 Change one signal line
-
-Open the downloaded `my_alpha.py` in Jupyter and find the `# ← write your signal here` marker. Edit that one line.
+Open `my_first_alpha.py` in Jupyter and find the `# ← write your signal here` marker. Edit that one line.
 
 Example — change 10-day momentum to 60-day:
 
@@ -110,16 +106,18 @@ signal = close.pct_change(10)
 signal = close.pct_change(60)
 ```
 
-### 3.3 Backtest — paste the whole file into a notebook cell
+(Want to start over from scratch? Copy `~/njt-contest/templates/target_weight_template.py` over `my_first_alpha.py` — or `templates/order_book_template.py` over `my_first_order_book_alpha.py` — from a host terminal.)
 
-Create a new `.ipynb` in Jupyter Lab → paste the entire `my_alpha.py` into a cell → Shift+Enter:
+### 3.2 Backtest — paste the whole file into a notebook cell
+
+Create a new `.ipynb` in Jupyter Lab → paste the entire `my_first_alpha.py` into a cell → Shift+Enter:
 
 - `SimulationResult(...)` prints (20 metrics)
 - NAV chart renders inline beneath the cell
 
 Or run from Jupyter Lab's Terminal:
 ```bash
-python /workspace/my_alpha.py
+python /workspace/my_first_alpha.py
 ```
 
 (Inside the container, `/workspace` = host's `~/njt-contest/my-alphas/`.)

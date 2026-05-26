@@ -218,15 +218,7 @@ README.md           docker-compose.yml    setup.md
 alpha_anatomy.md    rules.md              templates
 ```
 
-### 4.2 Make a workspace folder for your alpha code
-
-```bash
-mkdir my-alphas
-```
-
-This is the directory Jupyter Lab will open into. You'll put your `.py` / `.ipynb` files here.
-
-### 4.3 Clone the submissions repo
+### 4.2 Clone the submissions repo
 
 ```bash
 git clone https://github.com/dhrhee-26/njt-submissions.git
@@ -234,7 +226,7 @@ git clone https://github.com/dhrhee-26/njt-submissions.git
 
 You'll see a few lines like "Cloning into 'njt-submissions'..." and then a prompt. A new folder `njt-submissions` appeared.
 
-### 4.4 Switch to your branch
+### 4.3 Switch to your branch
 
 ```bash
 cd njt-submissions
@@ -248,7 +240,7 @@ If you see:
 - `Switched to a new branch 'interns/YOUR-HANDLE'` → success.
 - `error: pathspec ... did not match any file(s)` → the branch doesn't exist yet. Tell the admin: "Please create my branch `interns/YOUR-HANDLE` in njt-submissions."
 
-### 4.5 Verify the final layout
+### 4.4 Verify the final layout
 
 From inside `~/njt-contest`, run:
 
@@ -288,7 +280,7 @@ Expected: a line that shows `njt` with status `Up` or `running`.
 
 ```
 NAME    IMAGE                                       STATUS              PORTS
-njt     ghcr.io/dhrhee-26/njt-sdk-dist:latest       Up 30 seconds       0.0.0.0:8050->8050/tcp, 0.0.0.0:8888->8888/tcp
+njt     ghcr.io/dhrhee-26/njt-sdk-dist:main         Up 30 seconds       0.0.0.0:8050->8050/tcp, 0.0.0.0:8888->8888/tcp
 ```
 
 If `STATUS` says `Exited` or `Restarting`, something went wrong. See Troubleshooting.
@@ -311,23 +303,19 @@ You'll do this inside the **Jupyter Lab** browser tab (http://localhost:8888).
 ### 6.1 Tour of Jupyter Lab
 
 When you first open it, you'll see:
-- **Left sidebar**: a file browser. It shows `my-alphas/` (currently empty).
+- **Left sidebar**: a file browser. It shows two starter alphas shipped with the guide — one per pattern:
+  - `my_first_alpha.py` — `target_weight` pattern (continuous portfolio reweights)
+  - `my_first_order_book_alpha.py` — `order_book` pattern (discrete entry/exit orders)
 - **Main area**: a Launcher with tiles like "Notebook", "Terminal", "File", etc.
 - **Top menu bar**: File / Edit / View / Run / Kernel / ...
 
-### 6.2 Copy a starter template
+### 6.2 Open the starter and skim it
 
-The cloned guide repo includes ready-to-edit templates under `~/njt-contest/templates/`. Copy one into your workspace.
+Double-click `my_first_alpha.py` in the left sidebar to open it. It's a short, complete example of a target_weight alpha — fetches BTC + ETH daily close, computes a 10-day cross-sectional momentum signal, ranks and goes long/short.
 
-**On your host terminal (NOT inside Jupyter)**:
+The walkthrough below uses `my_first_alpha.py`, but everything works identically for `my_first_order_book_alpha.py` if you'd rather start from the event-driven pattern — open that file instead.
 
-```bash
-cp ~/njt-contest/templates/target_weight_template.py ~/njt-contest/my-alphas/my_alpha.py
-```
-
-(For an event-driven alpha later, use `templates/order_book_template.py`.)
-
-Refresh the Jupyter Lab browser tab — `my_alpha.py` now appears in the left sidebar. Double-click it to open and read through it — a short, complete example of a target_weight alpha.
+(Want to restart from the canonical template? Copy `~/njt-contest/templates/target_weight_template.py` over `my_first_alpha.py` — or `templates/order_book_template.py` over `my_first_order_book_alpha.py` — from a host terminal.)
 
 ### 6.3 Create a notebook to run it
 
@@ -341,14 +329,14 @@ Refresh the Jupyter Lab browser tab — `my_alpha.py` now appears in the left si
 In the empty cell, paste:
 
 ```python
-%load my_alpha.py
+%load my_first_alpha.py
 ```
 
-Press **Shift + Enter** (this means "run the cell"). The cell will be replaced with the entire contents of `my_alpha.py` (preceded by a `# %load` comment).
+Press **Shift + Enter** (this means "run the cell"). The cell will be replaced with the entire contents of `my_first_alpha.py` (preceded by a `# %load` comment).
 
 Press **Shift + Enter** again to run the code.
 
-After ~10 seconds, you should see:
+The first run downloads daily-close data for BTC and ETH from Binance Vision (~1 minute on first invocation, cached afterwards). When it finishes you should see:
 1. A printed line like `SimulationResult(return=+27.82%, sharpe=+0.60, ...)`
 2. A **Summary** block listing 20 metrics
 3. An interactive NAV chart that you can zoom and hover on
@@ -369,6 +357,8 @@ Try changing `LOOKBACK = 10` (defined at the top of the file) to a different val
 
 This is the basic loop: edit signal → Shift+Enter → see new result → iterate.
 
+Once you're happy with momentum and want a richer cross-section, expand `SYMBOLS` to the full 9 majors listed in `~/njt-contest/rules.md`.
+
 ---
 
 ## Part 7 — Compare with built-in alphas in dash
@@ -382,12 +372,12 @@ You'll see:
 - Several charts placeholders
 
 Click the Strategies dropdown. You'll see groups:
-- **alpha** — 11 built-in reference alphas (e.g., "60d Momentum Top-3 Long")
-- **benchmark** — buy-hold strategies for each major + an equal-weight basket
+- **benchmark** — buy-hold strategies for each major + an equal-weight basket (10 strategies)
+- **submission** — populated with submissions merged into `njt-submissions/main` (empty until the first interns submit)
 
 Select one or two strategies, then click **RUN BACKTEST**. After a few seconds, NAV charts, drawdown, and a statistics table appear. Spend a few minutes exploring.
 
-After you submit your own alpha (next part), it will appear under the **submission** group in this same dropdown.
+After you submit your own alpha (next part) and the admin merges your PR, it will appear under the **submission** group in this same dropdown.
 
 ---
 

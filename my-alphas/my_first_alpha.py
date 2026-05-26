@@ -1,18 +1,22 @@
 """
-TEMPLATE — target_weight alpha (cross-sectional / portfolio pattern, single file).
+Your starter alpha — runnable out of the box.
 
-Copy this file, then change only the line marked "← write your signal here"
-to your own signal. Running the file as-is (`python my_alpha.py`) prints a
-SimulationResult and opens an interactive NAV chart.
+Edit the line marked "← write your signal here" to plug in your own idea, then
+run the whole file (Shift+Enter in Jupyter, or `python my_first_alpha.py` from
+a terminal). You'll get a SimulationResult printed + an interactive NAV chart.
 
-Default signal: 10-day cross-sectional momentum, long top half / short bottom
-half (equal-weight). Default universe: BTC + ETH only — keeps the first data
-fetch under a minute. Expand SYMBOLS to the full 9 majors (see rules.md) for
-your real submission.
-
----
+Defaults shipped here:
+  - signal:    10-day cross-sectional momentum, long top half / short bottom
+               half (equal-weight)
+  - universe:  BTC + ETH only — first data fetch finishes in under a minute.
+               Expand SYMBOLS to the full 9 majors (see ../rules.md) for your
+               real contest submission.
 
 For contest W1 (target_weight, 1d). See ../rules.md for the full rules.
+
+A canonical reference version of this file lives at
+`../templates/target_weight_template.py` — copy it again if you want a
+clean restart.
 """
 
 from __future__ import annotations
