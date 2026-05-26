@@ -34,7 +34,7 @@ class OrderList:                        # for order_book
     starting_cash: float = 10000.0
 ```
 
-The `Order` object is duck-typed — it just needs `timestamp / side / qty / price` fields. Define one locally (single-file pattern) or import the shared `strategies.modules.position.state_machine_orders.Order`.
+The `Order` object is duck-typed — it just needs `timestamp / side / qty / price` fields. Define one locally with a `@dataclass(frozen=True)` (the templates show this pattern).
 
 ---
 
@@ -181,54 +181,19 @@ DESCRIPTION = "Single-asset BTC SMA crossover, long/short."
 
 ---
 
-## 4. Single-file (inline) vs Modular
+## 4. Single-file (inline) is the only pattern
 
-### 4.1 Single-file — the `templates/*_template.py` pattern
+Everything (data + signal + position) lives inside `Alpha.get()`. The only imports you need from the SDK are:
 
-Everything (data + signal + position) lives inside `get()`. The only imports from the SDK are the two dataclasses in `framework.types`.
+- `feeds.Dataset` — for loading data
+- `framework.types.{CleanData, Positions, OrderList}` — the dataclasses you return
+- Standard libraries (`pandas`, `numpy`, etc.)
 
-**When to use:**
-- One-off signal — not going to be reused in another alpha
-- Fast iteration — edit a single file
-- Custom indicator (RSI, MACD, regime detector, etc.) — anything not in the shared signal modules
+That's it. **There is no shared `strategies.modules.*` package available in the contest image** — composing alphas from pre-built `DataModule + SignalModule + PositionModule` classes is intentionally not supported. The contest's goal is for you to think through data → signal → position end-to-end in one place each time, not assemble pre-made parts.
 
-**Examples:** `templates/target_weight_template.py`, `templates/order_book_template.py`
+**Templates:** `templates/target_weight_template.py`, `templates/order_book_template.py` — both follow this pattern. Pick one and edit.
 
-### 4.2 Modular — the pattern used by SDK reference alphas
-
-Compose from building blocks in `strategies.modules.{data,signal,position}.*`. The alpha entry file becomes a 4-line slot assignment:
-
-```python
-from strategies.modules.data     import BinanceMajorsClose
-from strategies.modules.signal   import NDayLogReturn
-from strategies.modules.position import CrossSectionalRank
-from framework.types import CleanData, Positions
-
-class Alpha:
-    data     = BinanceMajorsClose()                          # 9 majors close
-    signal   = NDayLogReturn(lookback=60)                    # 60d log return
-    position = CrossSectionalRank(direction="high_long")     # rank → top half long
-
-    def get(self):
-        clean = self.data.load()
-        sig   = self.signal.compute(clean)
-        pos   = self.position.build(sig, clean)
-        return pos, clean
-
-NAME, KIND, PRESET = "60d Momentum L/S", "target_weight", "binance_um_perpetual"
-DESCRIPTION = "..."
-```
-
-**When to use:**
-- A building block is shared across multiple alphas (one signal + two position variants = two alphas)
-- You want to make a piece easy for someone else to reuse
-
-**Built-in building blocks available in the SDK:**
-- `data/`: `BinanceMajorsClose`, `BinanceMajorsCloseFunding`, `BtcClose`, `SingleSymbolClose`
-- `signal/`: `NDayLogReturn`, `SMACrossover`, `FundingRollingAvg`, `RollingVolatility`, `CompositeSignal`
-- `position/`: `CrossSectionalRank`, `TopKLong`, `StateMachineOrders`, `Identity`
-
-You don't need to write modular alphas. Single-file is the recommended path. Modular is just how the SDK's own reference alphas happen to be written.
+**If you find yourself wanting to re-use a signal across alphas:** copy-paste it. The two algorithms are different alphas with shared lineage — keep them as separate single-file files. Premature abstraction (a shared module) hides the differences and slows iteration in a short contest.
 
 ---
 

@@ -192,20 +192,22 @@ dash is already running at http://localhost:8050. Refresh the browser → Strate
 
 All evaluated under the same cost preset → fair comparison.
 
-### 6.3 Compare two alphas inside a notebook
+### 6.3 Compare two of your own alphas inside a notebook
 
 ```python
 from framework import evaluate_alpha
 from backtest import run_backtest, compare
-from my_alpha import Alpha                       # your alpha
-from strategies.momentum_top3 import Alpha as Benchmark
+from my_alpha_v1 import Alpha as A1
+from my_alpha_v2 import Alpha as A2
 
-r_mine  = run_backtest(evaluate_alpha({"alpha_cls": Alpha,     "kind": "target_weight", "preset": "binance_um_perpetual"}))
-r_bench = run_backtest(evaluate_alpha({"alpha_cls": Benchmark, "kind": "target_weight", "preset": "binance_um_perpetual"}))
+r1 = run_backtest(evaluate_alpha({"alpha_cls": A1, "kind": "target_weight", "preset": "binance_um_perpetual"}))
+r2 = run_backtest(evaluate_alpha({"alpha_cls": A2, "kind": "target_weight", "preset": "binance_um_perpetual"}))
 
-cmp = compare({"My alpha": r_mine, "Momentum Top-3": r_bench})
+cmp = compare({"v1": r1, "v2": r2})
 cmp.results          # dict[name → SimulationResult]
 ```
+
+For comparison against the built-in benchmarks (MAJORS_9 equal-weight, single-symbol buy-holds), use the dash UI at http://localhost:8050 — select your alpha + one or more benchmarks in the dropdown and click RUN BACKTEST.
 
 ---
 
