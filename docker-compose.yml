@@ -19,7 +19,10 @@
 
 services:
   njt:
-    image: ghcr.io/dhrhee-26/njt-sdk-dist:latest
+    # NOTE: pinned to :main until the first v* release tag lands a :latest.
+    # `:latest` is only published on v* tag pushes (see njt-sdk-dist CI),
+    # and the v0.1.0 push is currently delayed by a GitHub Actions outage.
+    image: ghcr.io/dhrhee-26/njt-sdk-dist:main
     container_name: njt
     ports:
       - "8888:8888"        # Jupyter Lab
