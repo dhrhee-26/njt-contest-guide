@@ -101,18 +101,16 @@ if __name__ == "__main__":
 
 
 # ─── (Optional) Submit ────────────────────────────────────────────────────────
-# Once you're happy with the alpha, uncomment + edit the block below to dump
-# positions.parquet + meta.json to your branch of njt-submissions.
+# When you're happy with the alpha, uncomment the block below to push it to
+# your branch of njt-submissions. `submit()` writes positions.parquet +
+# meta.json under /submissions/interns/<your-handle>/<strategy_id>/, then
+# git add / commit / push, then prints a clickable PR-creation URL. Your
+# handle is auto-detected from the current branch name.
 #
 # if __name__ == "__main__":
-#     from framework import export_submission
-#     INTERN      = "your-name"                  # handle the admin assigned you
-#     STRATEGY_ID = "my_alpha_v1"                # folder name (your choice)
-#     SUBMISSIONS = "/submissions"               # in-container mount path
-#
-#     folder = export_submission(
-#         alpha=Alpha(), intern=INTERN, strategy_id=STRATEGY_ID,
+#     from framework import submit
+#     submit(
+#         Alpha(),
+#         strategy_id="my_alpha_v1",                  # folder name (your choice)
 #         name=NAME, preset=PRESET, description=DESCRIPTION,
-#         submissions_root=SUBMISSIONS,
 #     )
-#     print(f"submitted: {folder}")

@@ -130,19 +130,17 @@ if __name__ == "__main__":
 
 
 # ─── (Optional) Submit ────────────────────────────────────────────────────────
-# `export_submission` converts order_book → target_weight positions automatically
-# (the on-disk format is unified; original KIND is preserved as `source_kind`
-# in meta.json).
+# When you're happy with the alpha, uncomment the block below to push it to
+# your branch of njt-submissions. `submit()` converts order_book → target_weight
+# positions automatically (the on-disk format is unified; original KIND is
+# preserved as `source_kind` in meta.json), then git add / commit / push, then
+# prints a clickable PR-creation URL. Your handle is auto-detected from the
+# current branch name.
 #
 # if __name__ == "__main__":
-#     from framework import export_submission
-#     INTERN      = "your-name"
-#     STRATEGY_ID = "my_alpha_v1"
-#     SUBMISSIONS = "/submissions"               # in-container mount path
-#
-#     folder = export_submission(
-#         alpha=Alpha(), intern=INTERN, strategy_id=STRATEGY_ID,
+#     from framework import submit
+#     submit(
+#         Alpha(),
+#         strategy_id="my_alpha_v1",                  # folder name (your choice)
 #         name=NAME, preset=PRESET, description=DESCRIPTION,
-#         submissions_root=SUBMISSIONS,
 #     )
-#     print(f"submitted: {folder}")

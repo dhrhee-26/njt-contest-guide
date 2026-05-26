@@ -108,12 +108,12 @@ Keep this Terminal window open. You'll use it for several steps.
 
 ---
 
-## Part 3 — Set up Git and GitHub authentication (~5 minutes)
+## Part 3 — Set up Git and SSH for GitHub (~5 minutes)
 
 You'll push your submissions through Git to GitHub. You need:
 1. Git installed (usually already there on Mac/Linux; needs install on Windows)
 2. Your identity configured (name + email)
-3. A way to authenticate with GitHub
+3. An **SSH key** registered with GitHub — used for both cloning your private submissions branch and pushing to it (from inside the container)
 
 ### 3.1 Check Git is installed
 
@@ -138,56 +138,80 @@ git config --global user.email "you@example.com"
 
 Nothing is printed if successful — that's normal.
 
-### 3.3 Install the GitHub CLI (`gh`)
+### 3.3 Generate an SSH key
 
-The GitHub CLI lets you authenticate easily. Install it:
+First, check whether you already have one:
 
-**Mac (with Homebrew):**
 ```bash
-brew install gh
+ls ~/.ssh/id_ed25519
 ```
 
-Don't have Homebrew? Install it first:
-```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
-Then run `brew install gh`.
+If that prints a path (no "No such file" error), you already have a key — skip to **3.4**.
 
-**Windows:**
+Otherwise, generate one:
+
 ```bash
-winget install --id GitHub.cli
+ssh-keygen -t ed25519 -C "you@example.com"
 ```
-Or download from https://cli.github.com/.
+
+Use the same email you used on GitHub. The command will ask three questions:
+
+1. **"Enter file in which to save the key"** — press **Enter** to accept the default (`~/.ssh/id_ed25519`)
+2. **"Enter passphrase"** — press **Enter** to leave empty (the container needs to use the key without prompting)
+3. **"Enter same passphrase again"** — press **Enter**
+
+You should see "Your identification has been saved in `~/.ssh/id_ed25519`".
+
+### 3.4 Add the public key to GitHub
+
+Copy the **public** key (the `.pub` file — never share the file without `.pub`) to your clipboard:
+
+**Mac:**
+```bash
+pbcopy < ~/.ssh/id_ed25519.pub
+```
 
 **Linux:**
-Follow https://github.com/cli/cli/blob/trunk/docs/install_linux.md.
+```bash
+cat ~/.ssh/id_ed25519.pub
+```
+Then select the printed line and copy it.
 
-### 3.4 Authenticate with GitHub
+**Windows (PowerShell):**
+```powershell
+Get-Content ~/.ssh/id_ed25519.pub | Set-Clipboard
+```
+
+Open https://github.com/settings/keys in your browser, click **New SSH key**:
+
+- **Title**: anything memorable, e.g. `njt-contest laptop`
+- **Key type**: Authentication Key
+- **Key**: paste from clipboard
+
+Click **Add SSH key**.
+
+### 3.5 Test the connection
 
 ```bash
-gh auth login
+ssh -T git@github.com
 ```
 
-Answer the prompts:
-1. **What account do you want to log into?** → **GitHub.com**
-2. **What is your preferred protocol for Git operations?** → **HTTPS**
-3. **Authenticate Git with your GitHub credentials?** → **Yes**
-4. **How would you like to authenticate GitHub CLI?** → **Login with a web browser**
+The first time you run this, it will ask:
 
-A one-time code appears in your Terminal (something like `XXXX-XXXX`). The CLI will then open your browser. Paste the code and click **Authorize**.
-
-Back in the Terminal, you should see:
 ```
-✓ Authentication complete.
-✓ Logged in as your-github-username
+The authenticity of host 'github.com (...)' can't be established.
+... Are you sure you want to continue connecting (yes/no/[fingerprint])?
 ```
 
-Verify:
-```bash
-gh auth status
+Type `yes` and press Enter.
+
+You should then see:
+
+```
+Hi <your-github-username>! You've successfully authenticated, but GitHub does not provide shell access.
 ```
 
-Should print "Logged in to github.com account ...".
+That message — including "does not provide shell access" — means success. If you instead see "Permission denied (publickey)", revisit 3.4 (the key wasn't added to GitHub correctly).
 
 ---
 
@@ -221,10 +245,12 @@ alpha_anatomy.md    rules.md              templates
 ### 4.2 Clone the submissions repo
 
 ```bash
-git clone https://github.com/dhrhee-26/njt-submissions.git
+git clone git@github.com:dhrhee-26/njt-submissions.git
 ```
 
 You'll see a few lines like "Cloning into 'njt-submissions'..." and then a prompt. A new folder `njt-submissions` appeared.
+
+(This uses SSH because the submissions repo is private. Your SSH key from Part 3 handles the auth — no password prompt.)
 
 ### 4.3 Switch to your branch
 
@@ -381,67 +407,50 @@ After you submit your own alpha (next part) and the admin merges your PR, it wil
 
 ---
 
-## Part 8 — Submit (your first attempt) (~5 minutes)
+## Part 8 — Submit (your first attempt) (~2 minutes)
 
-When you have an alpha you're happy with, you submit it via a notebook cell.
+When you have an alpha you're happy with, you submit it from one notebook cell.
 
 In the same `try_it.ipynb` notebook (or a new cell at the bottom):
 
 ```python
-from framework import export_submission
-import subprocess
+from framework import submit
 
-INTERN      = "YOUR-HANDLE"               # ← put your handle here, same as your branch
-STRATEGY_ID = "my_first_alpha"            # ← name this folder however you want
-NAME        = "My First Alpha"            # ← human-readable label
-DESCRIPTION = "Trying out the contest."
-
-# 1) Dump positions + meta to the submissions folder
-folder = export_submission(
-    alpha=Alpha(),               # the Alpha class from the loaded rsi_mean_reversion.py
-    intern=INTERN,
-    strategy_id=STRATEGY_ID,
-    name=NAME,
+submit(
+    Alpha(),                           # the Alpha class from the cell above
+    strategy_id="my_first_alpha_v1",   # folder name on your branch (your choice)
+    name="My First Alpha",             # human-readable label shown in dash
     preset="binance_um_perpetual",
-    description=DESCRIPTION,
-    submissions_root="/submissions",
+    description="Trying out the contest.",
 )
-print(f"Wrote {folder}")
-
-# 2) Git add + commit + push
-rel = str(folder.relative_to("/submissions"))
-subprocess.run(["git", "-C", "/submissions", "add", rel], check=True)
-subprocess.run(["git", "-C", "/submissions", "commit", "-m", f"{INTERN}: add {STRATEGY_ID}"], check=True)
-subprocess.run(["git", "-C", "/submissions", "push"], check=True)
-print("✓ Pushed.")
 ```
 
-**Important: replace `YOUR-HANDLE`** with your actual handle (e.g., `"alice"`).
+That's it — no handle, no git commands. `submit()` figures out your handle from your branch name (`interns/YOUR-HANDLE`), runs the alpha, writes `positions.parquet` + `meta.json`, then `git add` / `commit` / `push` for you.
 
-Press Shift+Enter. After a few seconds, you should see:
-```
-Wrote /submissions/interns/YOUR-HANDLE/my_first_alpha
-✓ Pushed.
-```
+Press Shift+Enter. After a few seconds, you should see something like:
 
-This means your `positions.parquet` and `meta.json` are now pushed to the `interns/YOUR-HANDLE` branch on GitHub.
+```
+✓ submitted: interns/YOUR-HANDLE/my_first_alpha_v1
+  commit:    abc1234567  on branch interns/YOUR-HANDLE
+  open PR:   https://github.com/dhrhee-26/njt-submissions/compare/main...interns/YOUR-HANDLE?expand=1
+```
 
 ### Open the PR
 
-Back in the Jupyter Lab Terminal (or your host Terminal), run:
-
-```bash
-gh pr create --repo dhrhee-26/njt-submissions \
-  --base main --head interns/YOUR-HANDLE \
-  --title "YOUR-HANDLE: my_first_alpha" \
-  --body "First submission."
-```
-
-Or open the GitHub UI at https://github.com/dhrhee-26/njt-submissions/pulls and click **New pull request**.
+Click (or copy) the **open PR** URL. GitHub opens the "Comparing changes" page with a green **Create pull request** button — click it, leave the title/body as-is (or edit if you want), then click **Create pull request** again to submit.
 
 The admin will review and merge it.
 
-After merge, the next time you `git pull origin main` on the host (see daily routine below), your alpha appears in the **submission** group of the dash dropdown — alongside other interns'.
+After merge, the next time you `git pull origin main` (see daily routine below), your alpha appears in the **submission** group of the dash dropdown — alongside other interns'.
+
+### Submitting again later
+
+When you iterate and want to push a new version:
+
+- **Same `strategy_id`** → overwrites your previous submission. `submit()` re-pushes; if you have an open PR for your branch, GitHub updates it automatically (no need to open a new one).
+- **New `strategy_id`** (e.g., `my_first_alpha_v2`) → creates a separate folder. Your branch will have both submissions; admins can compare them.
+
+If positions are byte-identical to the previous push, `submit()` prints "nothing to commit" and skips the push — no harm in running it again.
 
 ---
 
@@ -481,9 +490,10 @@ That's it.
 | `docker compose up` says "port already in use" (8888 or 8050) | Another program is using that port | Run `docker compose down`. Find the offender: Mac/Linux `lsof -i :8888`, Windows `netstat -ano \| findstr 8888`. Stop that program. Try `up -d` again |
 | Browser at http://localhost:8888 says "This site can't be reached" | Container failed to start, or browser cached old result | Run `docker compose ps` — if STATUS isn't "Up", run `docker compose logs njt` to see why. If status is Up, wait 20 seconds, hard-refresh browser (Cmd+Shift+R) |
 | `git checkout interns/your-name` says "pathspec did not match" | The admin hasn't created your branch yet | Ask the admin to create branch `interns/your-name` on `dhrhee-26/njt-submissions` |
-| `git push` says `permission denied (publickey)` | SSH auth isn't set up | Use HTTPS instead — `gh auth login` configures this automatically |
-| `git push` says `Authentication failed` | GitHub credentials wrong / expired | Run `gh auth login` again |
-| `export_submission` says `FileNotFoundError: /submissions` | Container was started outside `~/njt-contest` (mount path wrong) | `docker compose down`, `cd ~/njt-contest`, `docker compose up -d` |
+| `git clone git@github.com:...` says `Permission denied (publickey)` | SSH key isn't registered with GitHub | Revisit **Part 3.4** — make sure the contents of `~/.ssh/id_ed25519.pub` are pasted at https://github.com/settings/keys. Then `ssh -T git@github.com` should print "Hi `<your-username>`!" |
+| Container log: `ERROR — no SSH private key found under ~/.ssh/` | The host has no SSH key, so the container has nothing to push with | Run **Part 3.3** + **3.4** on the host, then `docker compose down && docker compose up -d` |
+| `submit()` says `current branch is 'main', expected 'interns/<handle>'` | You forgot to `git checkout interns/YOUR-HANDLE` on the host before starting the container | On the host: `cd ~/njt-contest/njt-submissions && git checkout interns/YOUR-HANDLE && cd ..`. No restart needed — the next `submit()` will see the new branch |
+| `submit()` says `not a git repository` | Container was started outside `~/njt-contest` (mount path wrong) | `docker compose down`, `cd ~/njt-contest`, `docker compose up -d` |
 | `Alpha is not defined` in the submission cell | You ran the submission cell without first running the cell that defines `Alpha` | Run the alpha definition cell first, then the submission cell |
 | Docker image download is very slow | Slow network, or peak hours | Be patient on the first pull. Subsequent updates are much smaller |
 | `docker compose pull` says "denied: pulling from public registry forbidden" | Some corporate networks block GHCR | Try from a different network, or ask the admin |

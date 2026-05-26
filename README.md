@@ -22,9 +22,11 @@ The contest only exposes you to **one Docker image + one git repo**:
 
 ## 1. Setup (one-time, ~5 minutes)
 
-Prerequisite: **Docker Desktop** (https://www.docker.com/products/docker-desktop/). No Python, pip, or virtualenv setup required.
+Prerequisites:
+- **Docker Desktop** (https://www.docker.com/products/docker-desktop/) — no Python, pip, or virtualenv setup required
+- **SSH key registered with GitHub** — the container pushes your submissions via SSH; the same key clones your private submissions branch on the host (see `setup.md` Part 3)
 
-> **New to Docker / the command line?** Read [`setup.md`](./setup.md) instead — every step spelled out, including installing Docker Desktop, configuring Git, and walking through your first backtest + submission. Come back here once everything works.
+> **New to Docker / the command line?** Read [`setup.md`](./setup.md) instead — every step spelled out, including installing Docker Desktop, configuring Git + SSH, and walking through your first backtest + submission. Come back here once everything works.
 
 ```bash
 # 1.1 Clone this guide repo into ~/njt-contest.
@@ -33,8 +35,8 @@ Prerequisite: **Docker Desktop** (https://www.docker.com/products/docker-desktop
 git clone https://github.com/dhrhee-26/njt-contest-guide.git ~/njt-contest
 cd ~/njt-contest
 
-# 1.2 Clone the submissions repo + switch to your branch
-git clone https://github.com/dhrhee-26/njt-submissions.git
+# 1.2 Clone the submissions repo (SSH — private) + switch to your branch
+git clone git@github.com:dhrhee-26/njt-submissions.git
 cd njt-submissions
 git checkout interns/<your-name>           # admin creates this branch ahead of time
 cd ..
@@ -209,56 +211,41 @@ For comparison against the built-in benchmarks (MAJORS_9 equal-weight, single-sy
 
 ---
 
-## 7. Submit — `export_submission` + git push (all from inside Jupyter)
+## 7. Submit — one call from inside Jupyter
 
 Once your alpha is ready, in a notebook cell:
 
 ```python
-from framework import export_submission
-import subprocess
+from framework import submit
 
-INTERN      = "<your-name>"
-STRATEGY_ID = "rsi_reversion_v1"
-
-# 1) Dump artifacts — submissions_root is the in-container path (/submissions)
-folder = export_submission(
-    alpha=Alpha(),
-    intern=INTERN,
-    strategy_id=STRATEGY_ID,
+submit(
+    Alpha(),
+    strategy_id="rsi_reversion_v1",
     name="14d RSI Mean Reversion",
     preset="binance_um_perpetual",
     description="Cross-sectional RSI(14) reversal on 9 majors.",
-    submissions_root="/submissions",
 )
-# → /submissions/interns/<your-name>/rsi_reversion_v1/
-#   ├── positions.parquet
-#   └── meta.json
-# (Also appears at host's ~/njt-contest/njt-submissions/interns/... since it's a mount.)
-
-# 2) git add + commit + push — host's ~/.gitconfig + ~/.ssh are mounted ro,
-#    so git push uses your existing GitHub credentials with no extra setup.
-rel = str(folder.relative_to("/submissions"))
-subprocess.run(["git", "-C", "/submissions", "add", rel], check=True)
-subprocess.run(["git", "-C", "/submissions", "commit", "-m", f"{INTERN}: add {STRATEGY_ID}"], check=True)
-subprocess.run(["git", "-C", "/submissions", "push"], check=True)
-print(f"✓ submitted + pushed: {rel}")
 ```
 
-Running that one cell completes the entire submission flow.
+`submit()` runs `export_submission` (writes `positions.parquet` + `meta.json` under `/submissions/interns/<your-handle>/rsi_reversion_v1/`), then `git add` / `commit` / `push`, then prints the PR-creation URL. Your handle is auto-detected from the current branch (`interns/<your-handle>`).
+
+Output looks like:
+
+```
+✓ submitted: interns/<your-handle>/rsi_reversion_v1
+  commit:    abc1234567  on branch interns/<your-handle>
+  open PR:   https://github.com/dhrhee-26/njt-submissions/compare/main...interns/<your-handle>?expand=1
+```
 
 ### 7.1 Open the PR
 
-Once the cell above finishes pushing, open the PR via GitHub UI or `gh` CLI. In Jupyter Terminal:
+Click the printed URL. GitHub opens the "Comparing changes" page; click **Create pull request**, then **Create pull request** again to submit. The admin then reviews + updates `universe.json` + merges.
 
-```bash
-gh pr create --base main --head interns/<your-name> \
-  --title "<your-name>: rsi_reversion_v1" \
-  --body "RSI(14) cross-sectional reversal on 9 majors. Local Sharpe ~0.3."
-```
+If you push again to the same branch (any new `submit()` call), GitHub updates the open PR automatically — no need to open a new one.
 
-Or in your host browser at `https://github.com/dhrhee-26/njt-submissions/pulls` → New PR.
+### 7.2 What if positions are unchanged?
 
-The admin then reviews + updates `universe.json` + merges.
+`submit()` checks whether anything actually changed since the last push. If your positions are byte-identical to the previous submission, it prints "positions unchanged — nothing to commit" and skips the push. Safe to re-run as many times as you want.
 
 ---
 

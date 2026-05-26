@@ -1,20 +1,25 @@
 # NJT contest — intern-facing one-line bring-up.
 #
 # Intern setup (one time):
+#   - generate an SSH key + add it to GitHub  (see setup.md Part 3)
 #   git clone https://github.com/dhrhee-26/njt-contest-guide.git ~/njt-contest
 #   cd ~/njt-contest
-#   git clone https://github.com/dhrhee-26/njt-submissions.git
+#   git clone git@github.com:dhrhee-26/njt-submissions.git
 #   cd njt-submissions && git checkout interns/<your-name> && cd ..
 #
 # Daily:
 #   docker compose up -d                  # http://localhost:8888 + :8050
 #   docker compose down                   # stop
 #
-# Submission from inside Jupyter (host's git creds are mounted ro, so
-# `git push` works without re-authenticating inside the container):
-#   subprocess.run(["git", "-C", "/submissions", "add", "interns/<name>/<sid>"])
-#   subprocess.run(["git", "-C", "/submissions", "commit", "-m", "msg"])
-#   subprocess.run(["git", "-C", "/submissions", "push"])
+# Submission from inside Jupyter — one call, auto-detects handle from branch:
+#   from framework import submit
+#   submit(Alpha(), strategy_id="my_alpha_v1", preset="binance_um_perpetual")
+#
+# Under the hood, submit() runs export_submission (positions.parquet +
+# meta.json under /submissions/interns/<handle>/<strategy_id>/), then
+# git add/commit/push, then prints the PR-creation URL. The container's
+# entrypoint converts the /submissions origin URL to SSH at startup if the
+# host cloned via HTTPS, and uses the SSH key mounted from the host below.
 
 services:
   njt:
@@ -31,18 +36,21 @@ services:
       - ./my-alphas:/workspace
 
       # Cloned njt-submissions repo (intern's branch checked out on the host).
-      # `export_submission(submissions_root="/submissions")` writes here, and
-      # the dash UI reads from here.
+      # submit() / export_submission(submissions_root="/submissions") write
+      # here, and the dash UI reads from here.
       - ./njt-submissions:/submissions
 
-      # Host git config + SSH keys, read-only, so `git push` from inside the
-      # container works with the intern's existing GitHub credentials. No
-      # second auth setup inside the container.
+      # Host git config + SSH key, read-only, so `git push` from inside the
+      # container can authenticate as the intern. No second auth setup needed.
       #
       # Mount target paths match the image's $HOME (=/home/njt, set in the
       # Dockerfile). Mounting to /root/* would make the files visible inside
       # the container but git/ssh would still look at $HOME/.gitconfig and
       # $HOME/.ssh and find nothing.
+      #
+      # The entrypoint requires at least one ~/.ssh/id_* private key (fails
+      # loud at startup if missing) and pre-populates known_hosts for
+      # github.com via ssh-keyscan into a writable /tmp path.
       - ${HOME}/.gitconfig:/home/njt/.gitconfig:ro
       - ${HOME}/.ssh:/home/njt/.ssh:ro
     restart: unless-stopped
