@@ -1,0 +1,11 @@
+# Interns create / clone these alongside the cloned guide repo.
+# They're each intern's own working state — not part of the guide itself.
+/my-alphas/
+/njt-submissions/
+
+# Common
+.DS_Store
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/

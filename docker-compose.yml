@@ -1,0 +1,41 @@
+# NJT contest — intern-facing one-line bring-up.
+#
+# Intern setup (one time):
+#   git clone https://github.com/dhrhee-26/njt-contest-guide.git ~/njt-contest
+#   cd ~/njt-contest
+#   mkdir my-alphas
+#   git clone https://github.com/dhrhee-26/njt-submissions.git
+#   cd njt-submissions && git checkout interns/<your-name> && cd ..
+#
+# Daily:
+#   docker compose up -d                  # http://localhost:8888 + :8050
+#   docker compose down                   # stop
+#
+# Submission from inside Jupyter (host's git creds are mounted ro, so
+# `git push` works without re-authenticating inside the container):
+#   subprocess.run(["git", "-C", "/submissions", "add", "interns/<name>/<sid>"])
+#   subprocess.run(["git", "-C", "/submissions", "commit", "-m", "msg"])
+#   subprocess.run(["git", "-C", "/submissions", "push"])
+
+services:
+  njt:
+    image: ghcr.io/dhrhee-26/njt-sdk-dist:latest
+    container_name: njt
+    ports:
+      - "8888:8888"        # Jupyter Lab
+      - "8050:8050"        # dash UI
+    volumes:
+      # Intern's alpha workspace (Jupyter Lab root).
+      - ./my-alphas:/workspace
+
+      # Cloned njt-submissions repo (intern's branch checked out on the host).
+      # `export_submission(submissions_root="/submissions")` writes here, and
+      # the dash UI reads from here.
+      - ./njt-submissions:/submissions
+
+      # Host git config + SSH keys, read-only, so `git push` from inside the
+      # container works with the intern's existing GitHub credentials. No
+      # second auth setup inside the container.
+      - ${HOME}/.gitconfig:/root/.gitconfig:ro
+      - ${HOME}/.ssh:/root/.ssh:ro
+    restart: unless-stopped
