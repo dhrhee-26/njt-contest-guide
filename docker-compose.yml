@@ -3,7 +3,6 @@
 # Intern setup (one time):
 #   git clone https://github.com/dhrhee-26/njt-contest-guide.git ~/njt-contest
 #   cd ~/njt-contest
-#   mkdir my-alphas
 #   git clone https://github.com/dhrhee-26/njt-submissions.git
 #   cd njt-submissions && git checkout interns/<your-name> && cd ..
 #
@@ -39,6 +38,11 @@ services:
       # Host git config + SSH keys, read-only, so `git push` from inside the
       # container works with the intern's existing GitHub credentials. No
       # second auth setup inside the container.
-      - ${HOME}/.gitconfig:/root/.gitconfig:ro
-      - ${HOME}/.ssh:/root/.ssh:ro
+      #
+      # Mount target paths match the image's $HOME (=/home/njt, set in the
+      # Dockerfile). Mounting to /root/* would make the files visible inside
+      # the container but git/ssh would still look at $HOME/.gitconfig and
+      # $HOME/.ssh and find nothing.
+      - ${HOME}/.gitconfig:/home/njt/.gitconfig:ro
+      - ${HOME}/.ssh:/home/njt/.ssh:ro
     restart: unless-stopped
