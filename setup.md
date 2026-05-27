@@ -19,6 +19,8 @@ You need:
 
 You do NOT need: Python installed, Anaconda, pip, virtualenv, an IDE, or anything Python-related. Everything Python-related lives inside the Docker container.
 
+> **Security — never paste credentials into a chat or AI assistant.** Nothing in this contest requires a GitHub Personal Access Token (PAT). The Docker image is on a **public** registry (`docker pull` works without `docker login`); the submissions repo is accessed via your own SSH key (set up in Part 3). If any guide, error message, or AI assistant (including ChatGPT, Claude, Cursor, Copilot, etc.) ever tells you to paste a PAT, a password, or the contents of `~/.ssh/id_ed25519` (the **private** key, no `.pub`) to debug something — **stop and message the admin instead**. If you have already pasted one, revoke it immediately at https://github.com/settings/tokens and tell the admin.
+
 ---
 
 ## Part 1 — Install Docker Desktop (~10 minutes)
@@ -137,6 +139,14 @@ git config --global user.email "you@example.com"
 ```
 
 Nothing is printed if successful — that's normal.
+
+Verify the config file now exists as a regular file (this matters for Part 5 — see the note there):
+
+```bash
+test -f ~/.gitconfig && echo "ok: ~/.gitconfig is a file"
+```
+
+You should see `ok: ~/.gitconfig is a file`. If you see nothing, the two commands above didn't run — try them again.
 
 ### 3.3 Generate an SSH key
 
@@ -285,6 +295,8 @@ If all of those are there, Part 4 is done.
 ---
 
 ## Part 5 — Start the container (~5 minutes for the first time)
+
+> **Before you run this**: make sure you completed **Part 3.2** (`git config --global user.name/email …`). The container mounts your host's `~/.gitconfig` so that `git` inside the container shares your identity. If that file does not exist when you run `docker compose up`, Docker silently creates `~/.gitconfig` as an **empty directory**, which then breaks `git` both on the host and in the container. If you skipped Part 3.2, do it now — otherwise see the matching row in Troubleshooting to recover.
 
 From `~/njt-contest`:
 
@@ -487,6 +499,7 @@ That's it.
 |---|---|---|
 | **Terminal**: `command not found: docker` | Docker Desktop isn't installed or not in PATH | Reinstall Docker Desktop; on Mac, sometimes you need to log out and back in |
 | `Cannot connect to the Docker daemon` | Docker Desktop isn't running | Open Docker Desktop, wait for the whale icon to stop animating, then retry |
+| Host `git` says `fatal: ... ~/.gitconfig: Is a directory`, or container says `unable to auto-detect email address` even though you set `user.email` | You ran `docker compose up` before Part 3.2, so Docker created `~/.gitconfig` as an empty folder instead of a file | `docker compose down`, then `rm -rf ~/.gitconfig`, then redo **Part 3.2** (`git config --global user.name/email …`), then `docker compose up -d`. Verify with `test -f ~/.gitconfig && echo ok` |
 | `docker compose up` says "port already in use" (8888 or 8050) | Another program is using that port | Run `docker compose down`. Find the offender: Mac/Linux `lsof -i :8888`, Windows `netstat -ano \| findstr 8888`. Stop that program. Try `up -d` again |
 | Browser at http://localhost:8888 says "This site can't be reached" | Container failed to start, or browser cached old result | Run `docker compose ps` — if STATUS isn't "Up", run `docker compose logs njt` to see why. If status is Up, wait 20 seconds, hard-refresh browser (Cmd+Shift+R) |
 | `git checkout interns/your-name` says "pathspec did not match" | The admin hasn't created your branch yet | Ask the admin to create branch `interns/your-name` on `dhrhee-26/njt-submissions` |
@@ -502,6 +515,8 @@ If you hit anything not in the table, post in **#njt-contest** or message the ad
 1. What you were doing (which command / cell)
 2. The full error message (copy-paste it, don't paraphrase)
 3. The output of `docker compose ps` and `docker compose logs njt --tail 30`
+
+**Do not paste GitHub tokens, passwords, or SSH private keys** into any chat, issue, or AI assistant while debugging. None of the contest tooling needs them — see the security note at the top of this document. If a suggested fix asks you to, route it past the admin first.
 
 ---
 
