@@ -9,6 +9,11 @@
 !/my-alphas/my_first_order_book_alpha.py
 /njt-submissions/
 
+# Binance Vision data cache, persisted across container restarts.
+# Auto-created on first `docker compose up`; can be safely deleted to force
+# a refetch.
+/data-cache/
+
 # Common
 .DS_Store
 __pycache__/

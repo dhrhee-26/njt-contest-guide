@@ -40,6 +40,12 @@ services:
       # here, and the dash UI reads from here.
       - ./njt-submissions:/submissions
 
+      # Persist Binance Vision download cache across container restarts.
+      # Without this, every `docker compose down/up` cycle wipes ~/.cache/feeds
+      # and the next backtest re-downloads zip files for each symbol (~3 min
+      # for 9 assets). Host directory is auto-created on first `up`.
+      - ./data-cache:/home/njt/.cache
+
       # Host git config + SSH key, read-only, so `git push` from inside the
       # container can authenticate as the intern. No second auth setup needed.
       #
