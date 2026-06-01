@@ -306,7 +306,8 @@ You don't have to fetch the whole universe yourself. A **seed cache** (1d klines
 
 ```bash
 cd ~/njt-contest
-tar -xzf seed-cache-1d.tar.gz -C data-cache/      # → data-cache/feeds/*.parquet
+curl -L -o seed-cache-1d.tar.gz https://github.com/dhrhee-26/njt-contest-guide/releases/latest/download/seed-cache-1d.tar.gz
+tar -xzf seed-cache-1d.tar.gz -C data-cache/      # → data-cache/feeds/*.parquet  (~27 MB, 529 symbols)
 ```
 
 Then keep it current yourself — from a Jupyter cell:
