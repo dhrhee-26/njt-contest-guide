@@ -4,19 +4,23 @@ Expands on `README.md` §10. Run through this once before each submission.
 
 ---
 
-## 1. Per-week constraints (curriculum)
+## 1. Per-week themes (curriculum)
 
-Each week of the contest exercises a different mental model:
+Each week of the contest exercises a different mental model. The kind shown is the **recommended** one for that week's theme — but **nothing is auto-rejected on kind**: any kind is submittable any week.
 
-| Week | Allowed KIND | Frequency | Learning focus |
+| Week | Theme (recommended kind) | Frequency | Learning focus |
 |---|---|---|---|
-| **W1** | `target_weight` only | daily (1d) | Cross-sectional thinking — rank, weight, dollar-neutral L/S |
-| **W2** | `order_book` only | daily (1d) | Event / state-machine thinking, trend-following, regime detection |
-| **W3+** | both | hourly (`.1h`) | Intraday reversal, microstructure |
+| **W1** | Cross-sectional weights — `margin_weight` (default) or `target_weight` | daily (1d) | Cross-sectional thinking — rank, weight, dollar-neutral L/S |
+| **W2** | Event / state machine — `order_book` | daily (1d) | Event / state-machine thinking, trend-following, regime detection |
+| **W3+** | any | hourly (`.1h`) | Intraday reversal, microstructure |
 
-Each week's alphas use only that week's KIND/frequency. A W1 alpha submitted as `order_book` will be auto-rejected.
+**Weekly rankings are reported separately** — comparing scores across weeks isn't meaningful (different themes/frequencies).
 
-**Weekly rankings are reported separately** — comparing a W1 score to a W2 score isn't meaningful (different constraints).
+**The three kinds** (set `KIND` in your file; the engine is chosen from it):
+
+- **`margin_weight`** — *the default*. Return a weight matrix; it's traded **statefully** on real cash/positions with a leverage cap, liquidation, and funding. At 1× gross it reproduces `target_weight` exactly (no decomposition gap); above 1× you actually use leverage. Run with `emit_orders=True` to also get the executable BUY/SELL order stream (the live-trading bridge). Control leverage/mode by returning `MarginPositions(weights, max_leverage=…, margin_mode="cross"|"isolated")` instead of `Positions`.
+- **`target_weight`** — the same weights on the lighter vectorized engine (no leverage/liquidation/funding state). Pick it if you don't want margin mechanics.
+- **`order_book`** — emit an explicit BUY/SELL order list; single-asset, event-driven state machine.
 
 ---
 
@@ -95,9 +99,9 @@ Built-in DataModules (`BinanceMajorsClose` etc.) pass `False` automatically. The
 
 ### 4.2 Lookahead — two places `.shift(1)` matters
 
-**`target_weight` alphas:**
+**Weight-based alphas (`margin_weight` / `target_weight`):**
 - If your signal uses today's close, you can't act on that signal at today's close (lookahead)
-- **The engine internally uses `weights[t-1]`** → if you call `.shift(1)` yourself, you'll be **double-shifting** (= 2-day lag)
+- **Both engines internally use `weights[t-1]`** → if you call `.shift(1)` yourself, you'll be **double-shifting** (= 2-day lag)
 - So return `weights` as computed from today's close (decision-time); the engine handles the lag
 
 **`order_book` alphas:**
@@ -134,9 +138,11 @@ Common causes:
 
 Recommended: `NOTIONAL == starting_cash` for ~1x leverage.
 
+The **margin engine** has the same failure mode: cross-margin marks `ruined=True` if the whole account is liquidated, isolated forfeits the liquidated leg's margin. Keep `max_leverage` modest and the book diversified.
+
 ### 5.3 What `weights.sum(axis=1)` means
 
-In a `target_weight` alpha, the row sum of weights indicates:
+In a weight-based (`margin_weight` / `target_weight`) alpha, the row sum of weights indicates:
 - `≈ 1.0` → 100% long-only
 - `≈ 0.0` → dollar-neutral L/S
 - `< 0` → short bias on that day
@@ -182,7 +188,7 @@ Each lives in its own folder → dash shows them all → you can see your own pr
 
 ## 8. Pre-PR checklist — run through this every time
 
-- [ ] `KIND` matches what the current week allows (W1: target_weight / W2: order_book)
+- [ ] `KIND` is set (`margin_weight` default; any kind is accepted — pick the one matching your idea)
 - [ ] `PRESET = "binance_um_perpetual"`
 - [ ] No `cost_overrides` class variable
 - [ ] Symbol names are lowercase with `usdt` suffix
