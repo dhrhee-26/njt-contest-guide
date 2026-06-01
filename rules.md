@@ -37,6 +37,23 @@ Single-asset alphas (order_book) pick one symbol; multi-asset alphas (target_wei
 - Symbol-name typos (`btc-usdt`, `BTC/USDT`, uppercase `BTCUSDT`, etc.) — exact form is lowercase `<base>usdt`
 - Things with no Binance USDT-perp (spot-only tokens, other quote currencies) — they won't fetch
 
+### 2.1 Liquidity — gate, then trust the cost model
+
+The 500+ universe includes a long tail of microcaps with erratic data. Three things keep that honest:
+
+1. **Gate your universe** by dollar volume — the contest floor is **$10M average daily dollar volume** (~184 symbols clear it). One call:
+   ```python
+   from feeds import liquid_universe
+   universe = liquid_universe(min_dollar_volume=10_000_000)   # or top_n=100 for a rank-based cut
+   ```
+   Build your alpha on `universe` rather than the raw 500+. Below this floor the data is mostly noise.
+2. **Market impact** (margin engine) — if you do trade thin names, passing a `volume` frame with `impact_bp` charges extra cost ∝ (your trade / the day's dollar volume), so size in a thin coin is punished. *At a $10k account this is barely binding* — a $30k (3×) trade is ~0.3% of a $10M/day book — so the $10M gate is about data quality, not impact.
+3. **Delisting / data gaps** — a symbol whose data ends is carried at its last price (not a phantom −100%); you can't size into a no-data bar.
+
+### 2.2 History — short series come out noisy
+
+Some coins listed only recently (e.g. XAUT since 2026), so a long backtest on them is short or noisy. Check `Dataset.load(...).index[0]` before leaning on a result.
+
 ---
 
 ## 3. Cost model — `binance_um_perpetual` preset everywhere
