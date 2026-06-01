@@ -345,7 +345,7 @@ Details → [`rules.md`](./rules.md). The big ones:
 1. **`Dataset.load(...)` defaults to `holdout_recent=True`** — silently trims the last 30 days. For backtest code, always pass `holdout_recent=False`.
 2. **`weights` is decision-time** — do NOT call `.shift(1)` yourself; the engine handles it.
 3. **Symbol names are lowercase USDT-perp** — `btcusdt`, `ethusdt`, ... (not `BTC`, `BTC/USDT`, or uppercase).
-4. **Typo'd / delisted symbols** — anything outside `universe.json`'s 9 majors won't fetch. PRs fail review.
+4. **Typo'd / non-existent symbols** — the universe is any Binance USDT-perp (`rules.md` §2), but the exact form is lowercase `<base>usdt`; spot-only tokens / other quotes won't fetch.
 5. **`cost_overrides` in `meta.json` is forbidden** — zeroing costs to inflate Sharpe is a fairness violation.
 6. **`submissions_root` is `/submissions`** — in-container path. Auto-syncs with host's `~/njt-contest/njt-submissions`.
 

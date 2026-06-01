@@ -20,19 +20,22 @@ Each week's alphas use only that week's KIND/frequency. A W1 alpha submitted as 
 
 ---
 
-## 2. Universe — 9 majors
+## 2. Universe — any Binance USDT-perp
+
+The universe is **every USDT-margined perpetual on Binance** (500+ symbols). The 1d klines for all of them ship in the **seed cache**, and any symbol is fetchable on demand — see [`README.md`](./README.md) §9 (seed + `update_cache()` / `fetch_all_1d()`).
+
+The **9 majors** (`MAJORS_9`) are the liquid core and a sensible default:
 
 ```
 btcusdt  ethusdt  solusdt  bnbusdt  xrpusdt
 adausdt  dogeusdt  avaxusdt  linkusdt
 ```
 
-Called `MAJORS_9`. Single-asset alphas (order_book) pick one of these. Multi-asset alphas (target_weight) use some or all 9.
+Single-asset alphas (order_book) pick one symbol; multi-asset alphas (target_weight) use any set. You're free to go beyond the majors — but mind two things: **liquidity** (many alts are thinly traded; the cost model will punish high turnover there) and **history** (some coins listed only recently — e.g. XAUT since 2026 — so a long backtest comes out short or noisy). The built-in reference alphas all use `MAJORS_9`.
 
-**Not allowed:**
-- Symbols outside the 9 majors (MATIC, LTC, etc.) — `universe.json` won't list them and dash can't fetch
-- Symbol-name typos (`btc-usdt`, `BTC/USDT`, uppercase `BTCUSDT`, etc.) — exact form is lowercase `btcusdt`
-- Starting W3, the admin may expand the universe — will announce when that happens
+**Still not allowed:**
+- Symbol-name typos (`btc-usdt`, `BTC/USDT`, uppercase `BTCUSDT`, etc.) — exact form is lowercase `<base>usdt`
+- Things with no Binance USDT-perp (spot-only tokens, other quote currencies) — they won't fetch
 
 ---
 
