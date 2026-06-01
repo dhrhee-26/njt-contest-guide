@@ -54,7 +54,9 @@ Resulting folder layout:
 ├── my-alphas/                                  ← your alpha files (mounted into the container as /workspace)
 │   ├── my_first_alpha.py                       ← target_weight starter (cross-sectional, 2 assets)
 │   ├── my_first_order_book_alpha.py            ← order_book starter (event-driven, single asset)
-│   └── funding_order_book_alpha.py             ← order_book example using the funding rate
+│   ├── funding_order_book_alpha.py             ← order_book example using the funding rate
+│   ├── universe_momentum_alpha.py              ← target_weight over the liquid universe (panel)
+│   └── breakout_order_book_alpha.py            ← order_book Donchian breakout on a liquid coin
 └── njt-submissions/                            ← cloned submissions repo (mounted as /submissions)
     └── interns/<your-name>/                    ← your submissions accumulate here
 ```
@@ -87,13 +89,15 @@ Next day: `cd ~/njt-contest && docker compose up -d` and you're back.
 
 ## 3. First alpha — single-file pattern
 
-In Jupyter Lab (http://localhost:8888), the left sidebar already shows three runnable starters shipped with the guide:
+In Jupyter Lab (http://localhost:8888), the left sidebar already shows five runnable starters shipped with the guide:
 
 | File | Kind | Default signal | Good fit for |
 |---|---|---|---|
 | `my_first_alpha.py` | `target_weight` | 10-day cross-sectional momentum on BTC + ETH, long top half / short bottom half | continuous portfolio reweights, cross-sectional ideas |
 | `my_first_order_book_alpha.py` | `order_book` | SMA(5/20) crossover on BTC (state machine) | discrete entry/exit decisions, event-driven ideas |
 | `funding_order_book_alpha.py` | `order_book` | long BTC while 7d avg funding is positive, else flat | event-driven ideas keyed off funding / non-price data |
+| `universe_momentum_alpha.py` | `target_weight` | 30d cross-sectional momentum over **all liquid USDT-perps** (panel + `min_dollar_volume`) | the real cross-section — showcases the whole-universe panel + liquidity gate |
+| `breakout_order_book_alpha.py` | `order_book` | Donchian 20/10 breakout on a liquid coin (`liquid_universe`) | trend ideas on any liquid symbol, not just BTC |
 
 Pick whichever style fits your idea and edit it. The walkthrough below uses `my_first_alpha.py`; the order_book file behaves the same way (open, edit signal, Shift+Enter to backtest, optional submit block at the bottom).
 
