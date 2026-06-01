@@ -300,6 +300,28 @@ rm ~/njt-contest/data-cache/feeds/binance.klines.um.btcusdt.1d.parquet   # one i
 rm -rf ~/njt-contest/data-cache/feeds/                                   # clear everything
 ```
 
+**Bulk — the shipped seed + keeping it current**
+
+You don't have to fetch the whole universe yourself. A **seed cache** (1d klines for *every* USDT-perp) is published on the guide repo's [Releases](https://github.com/dhrhee-26/njt-contest-guide/releases) so everyone starts from the same data with no minutes-per-symbol wait. Download the latest `seed-cache-1d.tar.gz` and extract it once:
+
+```bash
+cd ~/njt-contest
+tar -xzf seed-cache-1d.tar.gz -C data-cache/      # → data-cache/feeds/*.parquet
+```
+
+Then keep it current yourself — from a Jupyter cell:
+
+```python
+from feeds import update_cache, fetch_all_1d
+
+update_cache()      # incrementally bring every cached symbol up to today (parallel)
+fetch_all_1d()      # also pull any newly-listed USDT-perp 1d you don't have yet
+```
+
+- `update_cache()` only downloads data *newer* than your cache (append) — refreshing the whole seed is minutes, not the hours a cold fetch would take.
+- New coins also appear as **missing** in the dash Data Monitor; `fetch_all_1d()` (or `Dataset.load("binance.klines.um.<sym>.1d")`) grabs them.
+- **Intraday is opt-in, per symbol** — `Dataset.load("binance.klines.um.solusdt.1h", update=True, holdout_recent=False)`. 1m for the whole universe is multiple GB, so only fetch the symbols you actually need.
+
 ---
 
 ## 10. Image updates
