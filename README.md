@@ -323,6 +323,15 @@ fetch_all_1d()      # also pull any newly-listed USDT-perp 1d you don't have yet
 - New coins also appear as **missing** in the dash Data Monitor; `fetch_all_1d()` (or `Dataset.load("binance.klines.um.<sym>.1d")`) grabs them.
 - **Intraday is opt-in, per symbol** — `Dataset.load("binance.klines.um.solusdt.1h", update=True, holdout_recent=False)`. 1m for the whole universe is multiple GB, so only fetch the symbols you actually need.
 
+**Whole-universe panel** — load one field across *every cached symbol* at once, as a wide DataFrame (columns = symbol, index = datetime) — ideal for cross-sectional alphas:
+
+```python
+close = Dataset.load("binance.klines.um.Close.1d", pandas=True, holdout_recent=False)
+# close.shape -> (dates, ~530 symbols); close["btcusdt"], close[["btcusdt","xautusdt"]], ...
+```
+
+The capitalised field is `Open` / `High` / `Low` / `Close` / `Volume`. It reads only what's cached (extract the seed first), and symbols with different listing dates are NaN-padded.
+
 ---
 
 ## 10. Image updates
