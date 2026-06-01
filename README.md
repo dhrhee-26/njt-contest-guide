@@ -267,21 +267,56 @@ Refresh http://localhost:8050 → other interns' alphas appear in the submission
 
 ---
 
-## 9. Image updates
+## 9. Cache management — the data lives on your machine
+
+Every backtest downloads Binance data once and caches it as a parquet file. The cache is a normal folder **on your own computer**, bind-mounted into the container, so it **persists across `docker compose down` / `up`** — you only pay the download cost the first time you touch a symbol.
+
+| Where you look | Path |
+|---|---|
+| **Your computer** (host) | `~/njt-contest/data-cache/feeds/` |
+| Inside the container | `/home/njt/.cache/feeds/` |
+
+Same files, two views. One parquet per identity, e.g. `binance.klines.um.btcusdt.1d.parquet`, `binance.fundingrate.um.btcusdt.parquet`. The folder grows as you backtest more symbols / intervals.
+
+**See what's cached**
+
+- **dash Data Monitor tab** (http://localhost:8050) — a read-only inventory of which identities/intervals are cached (`OK`) vs `missing`. View only; manage with the methods below.
+- Finder (macOS): `Cmd + Shift + G` → `~/njt-contest/data-cache/feeds` → browse the parquet files. (File Explorer on Windows: `%USERPROFILE%\njt-contest\data-cache\feeds`.)
+- Terminal: `ls -lh ~/njt-contest/data-cache/feeds/` · total size `du -sh ~/njt-contest/data-cache/feeds/`.
+
+> The Jupyter file browser is rooted at `my-alphas/`, so it does **not** show the cache — use Finder/Explorer or the terminal.
+
+**Refresh / update a symbol** — pass a parameter to `Dataset.load`, no button needed:
+
+```python
+Dataset.load("binance.klines.um.btcusdt.1d", update=True,     holdout_recent=False)  # force a full re-fetch
+Dataset.load("binance.klines.um.btcusdt.1d", update="append", holdout_recent=False)  # fetch only data newer than the cache
+```
+
+**Delete** — just remove the parquet (Finder → trash, or `rm`); it is re-downloaded on the next backtest that needs it. No container restart required.
+
+```bash
+rm ~/njt-contest/data-cache/feeds/binance.klines.um.btcusdt.1d.parquet   # one identity
+rm -rf ~/njt-contest/data-cache/feeds/                                   # clear everything
+```
+
+---
+
+## 10. Image updates
 
 When the admin announces a new SDK / dash version (Slack etc.):
 
 ```bash
 cd ~/njt-contest
-docker compose pull             # fetch the new image
-docker compose up -d            # restart (~30 seconds)
+docker compose pull                      # fetch the new image
+docker compose up -d --force-recreate    # swap the running container to it (~30 seconds)
 ```
 
-Your notebooks / alpha files / submissions are all mounted, so the update doesn't touch them.
+`docker compose pull` alone does **not** switch a container that is already running — without `--force-recreate` (or `docker compose down && docker compose up -d`) you stay on the old image. Your notebooks / alpha files / submissions / cache are all mounted, so the update doesn't touch them.
 
 ---
 
-## 10. Common gotchas
+## 11. Common gotchas
 
 Details → [`rules.md`](./rules.md). The big ones:
 
@@ -294,7 +329,7 @@ Details → [`rules.md`](./rules.md). The big ones:
 
 ---
 
-## 11. Where to go next
+## 12. Where to go next
 
 | Doc | Covers |
 |---|---|
