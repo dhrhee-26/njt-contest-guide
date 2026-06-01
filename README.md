@@ -328,6 +328,10 @@ fetch_all_1d()      # also pull any newly-listed USDT-perp 1d you don't have yet
 ```python
 close = Dataset.load("binance.klines.um.Close.1d", pandas=True, holdout_recent=False)
 # close.shape -> (dates, ~530 symbols); close["btcusdt"], close[["btcusdt","xautusdt"]], ...
+
+# liquidity-gated in one call — drop thin symbols (same $-volume gate as rules.md §2.1):
+liquid_close = Dataset.load("binance.klines.um.Close.1d", pandas=True, holdout_recent=False,
+                            min_dollar_volume=10_000_000)   # ~184 symbols
 ```
 
 The capitalised field is `Open` / `High` / `Low` / `Close` / `Volume`. It reads only what's cached (extract the seed first), and symbols with different listing dates are NaN-padded.
