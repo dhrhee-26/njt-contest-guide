@@ -4,17 +4,16 @@ Expands on `README.md` §10. Run through this once before each submission.
 
 ---
 
-## 1. Per-week themes (curriculum)
+## 1. Weekly deliverables (curriculum)
 
-Each week of the contest exercises a different mental model. The kind shown is the **recommended** one for that week's theme — but **nothing is auto-rejected on kind**: any kind is submittable any week.
+**The program plan (the PDF your admin shared) is the single source of truth for what each week's deliverable is.** This file does not redefine it — if the two ever disagree, follow the plan and tell your admin.
 
-| Week | Theme (recommended kind) | Frequency | Learning focus |
-|---|---|---|---|
-| **W1** | Cross-sectional weights — `margin_weight` (default) or `target_weight` | daily (1d) | Cross-sectional thinking — rank, weight, dollar-neutral L/S |
-| **W2** | Event / state machine — `order_book` | daily (1d) | Event / state-machine thinking, trend-following, regime detection |
-| **W3+** | any | hourly (`.1h`) | Intraday reversal, microstructure |
+Two things to be clear about, because they trip people up:
 
-**Weekly rankings are reported separately** — comparing scores across weeks isn't meaningful (different themes/frequencies).
+- **Each week exercises *both* paradigms, not one.** W1's deliverable is **two alphas — one weight-based (`margin_weight`/`target_weight`) *and* one `order_book`** — not "weights only this week, orders next week." Later weeks add count and combine them into portfolios. See the plan for the exact per-week list.
+- **Kind is never gated by code.** `submit()` accepts any kind any week; nothing is auto-rejected on kind, universe, or frequency. What actually governs a submission is (a) what you choose to submit and (b) your admin's review at the Thursday merge. The "themes" are a learning guide, not a filter.
+
+**Weekly rankings are reported separately** — comparing scores across weeks isn't meaningful (different deliverables, and intraday frequency from W3 on).
 
 **The three kinds** (set `KIND` in your file; the engine is chosen from it):
 

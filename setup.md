@@ -262,19 +262,19 @@ You'll see a few lines like "Cloning into 'njt-submissions'..." and then a promp
 
 (This uses SSH because the submissions repo is private. Your SSH key from Part 3 handles the auth — no password prompt.)
 
-### 4.3 Switch to your branch
+### 4.3 Tell submit() your handle
+
+You do **not** check out a branch. Leave `njt-submissions` on `main` and write a
+one-line `.env` so the container knows which branch is yours:
 
 ```bash
-cd njt-submissions
-git checkout interns/YOUR-HANDLE
-cd ..
+echo "NJT_HANDLE=YOUR-HANDLE" > .env
 ```
 
-**Replace `YOUR-HANDLE`** with the handle the admin gave you (e.g., `interns/alice`).
-
-If you see:
-- `Switched to a new branch 'interns/YOUR-HANDLE'` → success.
-- `error: pathspec ... did not match any file(s)` → the branch doesn't exist yet. Tell the admin: "Please create my branch `interns/YOUR-HANDLE` in njt-submissions."
+**Replace `YOUR-HANDLE`** with the handle the admin gave you (e.g., `alice`).
+Run this from `~/njt-contest` (the folder with `docker-compose.yml`), not inside
+`njt-submissions`. `submit()` pushes to `interns/YOUR-HANDLE` on its own and
+creates that branch from `main` on your first submit — nothing to check out.
 
 ### 4.4 Verify the final layout
 
@@ -479,9 +479,8 @@ docker compose up -d
 # Iterate on your alpha in Jupyter Lab...
 # Submit via a cell when ready (Part 8 pattern)...
 
-# Pull others' merged submissions to see in dash
+# Pull others' merged submissions to see in dash (you stay on main)
 cd njt-submissions
-git checkout main
 git pull origin main
 cd ..
 
@@ -502,10 +501,10 @@ That's it.
 | Host `git` says `fatal: ... ~/.gitconfig: Is a directory`, or container says `unable to auto-detect email address` even though you set `user.email` | You ran `docker compose up` before Part 3.2, so Docker created `~/.gitconfig` as an empty folder instead of a file | `docker compose down`, then `rm -rf ~/.gitconfig`, then redo **Part 3.2** (`git config --global user.name/email …`), then `docker compose up -d`. Verify with `test -f ~/.gitconfig && echo ok` |
 | `docker compose up` says "port already in use" (8888 or 8050) | Another program is using that port | Run `docker compose down`. Find the offender: Mac/Linux `lsof -i :8888`, Windows `netstat -ano \| findstr 8888`. Stop that program. Try `up -d` again |
 | Browser at http://localhost:8888 says "This site can't be reached" | Container failed to start, or browser cached old result | Run `docker compose ps` — if STATUS isn't "Up", run `docker compose logs njt` to see why. If status is Up, wait 20 seconds, hard-refresh browser (Cmd+Shift+R) |
-| `git checkout interns/your-name` says "pathspec did not match" | The admin hasn't created your branch yet | Ask the admin to create branch `interns/your-name` on `dhrhee-26/njt-submissions` |
+| `submit()` says `could not determine your contest handle` | `NJT_HANDLE` isn't set — no `.env`, or it's in the wrong folder | From `~/njt-contest` (the folder with `docker-compose.yml`): `echo "NJT_HANDLE=YOUR-HANDLE" > .env`, then `docker compose up -d --force-recreate` so the container picks it up |
 | `git clone git@github.com:...` says `Permission denied (publickey)` | SSH key isn't registered with GitHub | Revisit **Part 3.4** — make sure the contents of `~/.ssh/id_ed25519.pub` are pasted at https://github.com/settings/keys. Then `ssh -T git@github.com` should print "Hi `<your-username>`!" |
 | Container log: `ERROR — no SSH private key found under ~/.ssh/` | The host has no SSH key, so the container has nothing to push with | Run **Part 3.3** + **3.4** on the host, then `docker compose down && docker compose up -d` |
-| `submit()` says `current branch is 'main', expected 'interns/<handle>'` | You forgot to `git checkout interns/YOUR-HANDLE` on the host before starting the container | On the host: `cd ~/njt-contest/njt-submissions && git checkout interns/YOUR-HANDLE && cd ..`. No restart needed — the next `submit()` will see the new branch |
+| `submit()` pushes to the wrong handle | `NJT_HANDLE` in `.env` has a typo, or the container started before you wrote `.env` | Fix `~/njt-contest/.env`, then `docker compose up -d --force-recreate`. (Leaving `njt-submissions` on `main` is correct — you no longer check out your branch.) |
 | `submit()` says `not a git repository` | Container was started outside `~/njt-contest` (mount path wrong) | `docker compose down`, `cd ~/njt-contest`, `docker compose up -d` |
 | `Alpha is not defined` in the submission cell | You ran the submission cell without first running the cell that defines `Alpha` | Run the alpha definition cell first, then the submission cell |
 | Docker image download is very slow | Slow network, or peak hours | Be patient on the first pull. Subsequent updates are much smaller |

@@ -35,14 +35,16 @@ Prerequisites:
 git clone https://github.com/dhrhee-26/njt-contest-guide.git ~/njt-contest
 cd ~/njt-contest
 
-# 1.2 Clone the submissions repo (SSH — private) + switch to your branch
+# 1.2 Clone the submissions repo (SSH — private) — leave it on `main`
 git clone git@github.com:dhrhee-26/njt-submissions.git
-cd njt-submissions
-git checkout interns/<your-name>           # admin creates this branch ahead of time
-cd ..
+
+# 1.3 Tell submit() your handle (one line; no branch checkout needed)
+echo "NJT_HANDLE=<your-name>" > .env
 ```
 
-`<your-name>` is the handle the admin gives you. If your branch doesn't exist yet, ping the admin.
+`<your-name>` is the handle the admin gives you. You do **not** check out
+`interns/<your-name>` — leave `njt-submissions` on `main` and `git pull` to see
+merged + peer alphas; `submit()` pushes to your branch on its own (NJT-032).
 
 Resulting folder layout:
 
@@ -167,12 +169,10 @@ Details → [`alpha_anatomy.md`](./alpha_anatomy.md).
 | **Output** | wide DataFrame (date × symbol → weight) | chronological list of Order objects (single-asset) |
 | **Signal examples** | rank, z-score, momentum, mean reversion | SMA crossover, breakout, regime detection |
 | **Asset count** | multi-asset (e.g. 9 majors) | single asset |
-| **Contest W1** | ✅ allowed | ❌ |
-| **Contest W2** | ❌ | ✅ allowed |
 
-**W1 interns**: target_weight only. **W2 interns**: order_book only.
+(A third kind, **`margin_weight`** — the default — runs the same weights statefully with leverage/liquidation/funding; see [`rules.md`](./rules.md) §1.)
 
-(Per-week rules → [`rules.md`](./rules.md))
+**Kind is not gated by week.** Any kind is submittable any week — `submit()` rejects nothing on kind. **W1's deliverable is one weight-based alpha *and* one `order_book` alpha** (see the program plan PDF, the source of truth). Per-week deliverables → [`rules.md`](./rules.md) §1.
 
 ---
 
@@ -233,7 +233,7 @@ submit(
 )
 ```
 
-`submit()` runs `export_submission` (writes `positions.parquet` + `meta.json` under `/submissions/interns/<your-handle>/rsi_reversion_v1/`), then `git add` / `commit` / `push`, then prints the PR-creation URL. Your handle is auto-detected from the current branch (`interns/<your-handle>`).
+`submit()` runs `export_submission` (writes `positions.parquet` + `meta.json` under `/submissions/interns/<your-handle>/rsi_reversion_v1/`), then commits + pushes that folder to `origin/interns/<your-handle>` through a throwaway git worktree (your checked-out branch never moves), then prints the PR-creation URL. Your handle comes from `NJT_HANDLE` (your `.env`); the branch is created from `main` automatically on your first submit.
 
 Output looks like:
 
@@ -261,8 +261,7 @@ From the host terminal (or Jupyter Terminal):
 
 ```bash
 cd ~/njt-contest/njt-submissions
-git checkout main
-git pull origin main
+git pull origin main        # you stay on main — no checkout needed
 ```
 
 Once the host's `njt-submissions/` updates, the container's `/submissions` reflects it instantly (same files, no copy). **No container restart needed.**
