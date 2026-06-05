@@ -12,7 +12,7 @@ One thing that trips people up: **kind is never gated by code.** `submit()` acce
 
 **The three kinds** (set `KIND` in your file; the engine is chosen from it):
 
-- **`margin_weight`** — *the default*. Return a weight matrix; it's traded **statefully** on real cash/positions with a leverage cap, liquidation, and funding. At 1× gross it reproduces `target_weight` exactly (no decomposition gap); above 1× you actually use leverage. Run with `emit_orders=True` to also get the executable BUY/SELL order stream (the live-trading bridge). Control leverage/mode by returning `MarginPositions(weights, max_leverage=…, margin_mode="cross"|"isolated")` instead of `Positions`.
+- **`margin_weight`** — *the default*. Return a weight matrix; it's traded **statefully** on real cash/positions with a leverage cap, liquidation, and funding. At 1× gross it reproduces `target_weight` exactly (no decomposition gap); above 1× you actually use leverage. Run with `emit_orders=True` to also get the executable BUY/SELL order stream (the live-trading bridge). Control leverage/mode by returning `MarginPositions(weights, max_leverage=…, margin_mode="cross"|"isolated")` instead of `Positions`. `margin_mode` can also be **per-symbol** — pass a dict `{"btcusdt": "isolated", "ethusdt": "cross", …}` (symbols you omit default to cross), matching Binance's per-position margin choice.
 - **`target_weight`** — the same weights on the lighter vectorized engine (no leverage/liquidation/funding state). Pick it if you don't want margin mechanics.
 - **`order_book`** — emit an explicit BUY/SELL order list; single-asset, event-driven state machine.
 
