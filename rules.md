@@ -4,22 +4,44 @@ Expands on `README.md` §10. Run through this once before each submission.
 
 ---
 
-## 1. Weekly deliverables (curriculum)
+## 1. What you submit
 
-**The program plan (the PDF your admin shared) is the single source of truth for what each week's deliverable is.** This file does not redefine it — if the two ever disagree, follow the plan and tell your admin.
+**What to submit and when is defined by your admin's program plan** — that's the single source of truth, and it's announced separately. This file is about *how* submissions work, not the schedule; if the two ever disagree, follow the plan and tell your admin.
 
-Two things to be clear about, because they trip people up:
-
-- **Each week exercises *both* paradigms, not one.** W1's deliverable is **two alphas — one weight-based (`margin_weight`/`target_weight`) *and* one `order_book`** — not "weights only this week, orders next week." Later weeks add count and combine them into portfolios. See the plan for the exact per-week list.
-- **Kind is never gated by code.** `submit()` accepts any kind any week; nothing is auto-rejected on kind, universe, or frequency. What actually governs a submission is (a) what you choose to submit and (b) your admin's review at the Thursday merge. The "themes" are a learning guide, not a filter.
-
-**Weekly rankings are reported separately** — comparing scores across weeks isn't meaningful (different deliverables, and intraday frequency from W3 on).
+One thing that trips people up: **kind is never gated by code.** `submit()` accepts any kind; nothing is auto-rejected on kind, universe, or frequency. What actually governs a submission is (a) what you choose to submit and (b) your admin's review at the merge. The "themes" are a learning guide, not a filter.
 
 **The three kinds** (set `KIND` in your file; the engine is chosen from it):
 
 - **`margin_weight`** — *the default*. Return a weight matrix; it's traded **statefully** on real cash/positions with a leverage cap, liquidation, and funding. At 1× gross it reproduces `target_weight` exactly (no decomposition gap); above 1× you actually use leverage. Run with `emit_orders=True` to also get the executable BUY/SELL order stream (the live-trading bridge). Control leverage/mode by returning `MarginPositions(weights, max_leverage=…, margin_mode="cross"|"isolated")` instead of `Positions`.
 - **`target_weight`** — the same weights on the lighter vectorized engine (no leverage/liquidation/funding state). Pick it if you don't want margin mechanics.
 - **`order_book`** — emit an explicit BUY/SELL order list; single-asset, event-driven state machine.
+
+### 1.1 Portfolios — combine your submitted alphas
+
+A portfolio combines several alphas into one strategy. It's **position-space**:
+it sums its sub-alphas' weight matrices (allocation-weighted) into one book that nets
+per-asset exposure, then backtests that book once. Subclass `BasePortfolio`:
+
+```python
+from framework import BasePortfolio
+
+class Portfolio(BasePortfolio):
+    alpha_list = ["mom_60d_v1", "funding_carry_v1", "btc_sma_v1"]   # YOUR strategy_ids
+    KIND = "margin_weight"          # the combined book is traded like a single alpha
+    def weight(self):               # default equal weight; override for inverse-vol / MVO
+        rets = self.alpha_returns()
+        iv = 1 / rets.rolling(30).std()
+        return iv.div(iv.sum(axis=1), axis=0)
+```
+
+- **Submit the alphas first.** `alpha_list` loads each from its `positions.parquet` on
+  your branch — so a portfolio can only reference alphas you've already submitted (or pass
+  an `Alpha` instance directly).
+- **Any kinds mix** (target_weight / order_book / margin_weight) — all reduce to weights.
+  Each sub-alpha's own leverage doesn't carry; the portfolio applies its own `KIND`.
+- **Submits like an alpha:** `submit(Portfolio(), strategy_id="my_pf_v1", …)`.
+- For the report: `pf.alpha_corr()` (orthogonality) and `pf.compare()` (portfolio vs each
+  alpha) quantify the diversification benefit. Full how-to: `alpha_anatomy.md` §3.3.
 
 ---
 

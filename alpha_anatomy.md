@@ -50,7 +50,7 @@ DESCRIPTION = "one-line description"
 dash walks each alpha file and registers it in the dropdown based on these four constants. **All four must be present at module level** for dash to recognize the file as an alpha.
 
 Optional:
-- `CATEGORY = "alpha"` (default — can omit). `"portfolio"` also valid — for meta-alphas that stack sub-alpha NAVs.
+- `CATEGORY = "alpha"` (default — can omit). `"portfolio"` also valid — for a portfolio that combines several alphas (see §3.3).
 - `Alpha.cost_overrides = {"buy_cost_bp": 0.0}` — class variable. Forbidden in contest submissions (see `rules.md`).
 
 ---
@@ -179,6 +179,73 @@ DESCRIPTION = "Single-asset BTC SMA crossover, long/short."
 - Close any existing position before opening a new one (= max 2 fills per flip)
 - Costs are applied at fill level (notional × bp)
 
+### 3.3 Portfolio — combine alphas you've already submitted
+
+A portfolio blends several alphas into one strategy. It combines them in
+**position space**: it sums their target-weight matrices (allocation-weighted),
+so a long BTC in one alpha and a short BTC in another actually *net out*, then
+backtests the single combined book once — with real turnover, cost, leverage and
+(for margin) liquidation.
+
+Subclass `BasePortfolio`, list your submitted alphas, and (optionally) write a
+`weight()`:
+
+```python
+from framework import BasePortfolio
+
+class Portfolio(BasePortfolio):
+    # your submitted alphas, by strategy_id (the folder name you used in submit())
+    alpha_list = ["mom_60d_v1", "funding_carry_v1", "btc_sma_v1"]
+
+    KIND = "margin_weight"          # how the COMBINED book is traded ("target_weight" ok)
+    max_leverage = 3.0              #   (margin params apply only when KIND="margin_weight")
+    margin_mode  = "cross"
+
+    # allocation across the alphas — DataFrame[date × label]. Default: equal weight.
+    def weight(self):
+        rets = self.alpha_returns()                     # each alpha's daily returns
+        inv_vol = 1 / rets.rolling(30).std()            # inverse-volatility weighting
+        return inv_vol.div(inv_vol.sum(axis=1), axis=0)
+
+NAME        = "My Portfolio"
+KIND        = "margin_weight"
+CATEGORY    = "portfolio"
+PRESET      = "binance_um_perpetual"
+DESCRIPTION = "Inverse-vol blend of momentum + carry + SMA."
+```
+
+**Key points:**
+- **Reference submitted alphas by `strategy_id`.** They're loaded from
+  `positions.parquet` on your branch, so **submit the alphas first**, then combine
+  them. (You can also pass an un-submitted `Alpha` instance, or use a dict
+  `{label: alpha}` / `(label, alpha)` tuples to name them.)
+- **Any kinds mix.** target_weight, order_book, and margin_weight sub-alphas all
+  reduce to a weight matrix and blend together. The *combined* book is replayed
+  with the single `KIND` you set (each sub-alpha's own leverage doesn't carry —
+  the portfolio applies its own).
+- **`weight()` is the allocation, not the positions.** Default is equal weight
+  across alphas; override for inverse-vol, mean-variance, etc. Use
+  `self.alpha_returns()` (date × label) for return-based schemes.
+- **It submits exactly like an alpha** — `Portfolio().get()` returns the same
+  `(positions, clean)` shape, so `submit(Portfolio(), strategy_id="my_pf_v1", …)`
+  just works.
+
+**Analysis helpers** (correlation/orthogonality + diversification, for your report):
+
+```python
+pf = Portfolio()
+pf.alpha_returns()   # DataFrame[date × label] — each alpha's daily returns
+pf.alpha_corr()      # correlation matrix of those returns (orthogonality)
+pf.compare()         # ComparisonReport: portfolio vs each individual alpha
+                     #   → .summary() table + .show() NAV/drawdown overlay
+```
+
+A good portfolio's Sharpe beats — and its drawdown is shallower than — each
+component alpha, precisely because the low-correlation books diversify. That's the
+diversification story to make quantitatively in your report.
+
+Template: `templates/portfolio_template.py`.
+
 ---
 
 ## 4. Single-file (inline) is the only pattern
@@ -187,9 +254,10 @@ Everything (data + signal + position) lives inside `Alpha.get()`. The only impor
 
 - `feeds.Dataset` — for loading data
 - `framework.types.{CleanData, Positions, OrderList}` — the dataclasses you return
+- `framework.BasePortfolio` — only when you're writing a portfolio (§3.3)
 - Standard libraries (`pandas`, `numpy`, etc.)
 
-That's it. **There is no shared `strategies.modules.*` package available in the contest image** — composing alphas from pre-built `DataModule + SignalModule + PositionModule` classes is intentionally not supported. The contest's goal is for you to think through data → signal → position end-to-end in one place each time, not assemble pre-made parts.
+That's it. **There is no shared `strategies.modules.*` package available in the contest image** — composing alphas from pre-built `DataModule + SignalModule + PositionModule` classes is intentionally not supported. The contest's goal is for you to think through data → signal → position end-to-end in one place each time, not assemble pre-made parts. (A portfolio in §3.3 is still single-file — it just references *your own submitted alphas* by id, not pre-made parts.)
 
 **Templates:** `templates/target_weight_template.py`, `templates/order_book_template.py` — both follow this pattern. Pick one and edit.
 
@@ -205,12 +273,14 @@ That's it. **There is no shared `strategies.modules.*` package available in the 
 
 ```
 binance.klines.um.btcusdt.1d           # USDⓈ-M perpetual, 1-day candles
-binance.klines.um.btcusdt.1h           # 1-hour candles (W3+)
+binance.klines.um.btcusdt.1h           # 1-hour candles (intraday)
 binance.fundingrate.um.btcusdt         # funding rate
-binance.metrics.um.btcusdt             # OI + long/short ratio (W3+ candidate)
+binance.metrics.um.btcusdt             # OI + long/short ratio
 ```
 
-For contest W1/W2, only `binance.klines.um.{symbol}.1d` is allowed.
+Any of these is fair game — use whatever data your idea needs. 1d klines are the
+simplest starting point; intraday candles, funding, and metrics are all available
+if your signal calls for them.
 
 ### 5.2 Columns when `pandas=True`
 
