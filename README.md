@@ -305,13 +305,17 @@ rm -rf ~/njt-contest/data-cache/feeds/                                   # clear
 
 **Bulk — the shipped seed + keeping it current**
 
-You don't have to fetch the whole universe yourself. A **seed cache** (1d klines for *every* USDT-perp) is published on the guide repo's [Releases](https://github.com/dhrhee-26/njt-contest-guide/releases) so everyone starts from the same data with no minutes-per-symbol wait. Download the latest `seed-cache-1d.tar.gz` and extract it once:
+You don't have to fetch the whole universe yourself. A **seed cache** of klines for *every* USDT-perp is published on the guide repo's [Releases](https://github.com/dhrhee-26/njt-contest-guide/releases) so everyone starts from the same data with no minutes-per-symbol wait. Two matched tarballs — **1d** (for backtests) and **1h** (for `margin_weight` intraday liquidation) — download both once:
 
 ```bash
 cd ~/njt-contest
 curl -L -o seed-cache-1d.tar.gz https://github.com/dhrhee-26/njt-contest-guide/releases/latest/download/seed-cache-1d.tar.gz
-tar -xzf seed-cache-1d.tar.gz -C data-cache/      # → data-cache/feeds/*.parquet  (~27 MB, 529 symbols)
+curl -L -o seed-cache-1h.tar.gz https://github.com/dhrhee-26/njt-contest-guide/releases/latest/download/seed-cache-1h.tar.gz
+tar -xzf seed-cache-1d.tar.gz -C data-cache/      # → data-cache/feeds/*.parquet  (~35 MB)
+tar -xzf seed-cache-1h.tar.gz -C data-cache/      # 1h klines for liquidation       (~800 MB)
 ```
+
+> The **1h** seed is what lets `margin_weight` judge liquidation intraday (a wick that breaches mid-day liquidates at that hour, not just at the close). It's optional but recommended — without it, liquidation falls back to the daily high/low, then the close; nothing breaks either way. The 1d and 1h seeds cover the same symbols and dates.
 
 Then keep it current yourself — from a Jupyter cell:
 
