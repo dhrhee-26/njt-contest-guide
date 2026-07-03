@@ -4,11 +4,23 @@ Expands on `README.md` §10. Run through this once before each submission.
 
 ---
 
+## 0. Phase 1 vs Phase 2 — what changed
+
+Phase 1 (W1-W5) ran on a PR-and-merge model: `submit()` pushed only `positions.parquet`+`meta.json` (no source) to your branch, you opened a PR, and the admin reviewed + merged it into `main` before it showed up for others. That's retired as of Phase 2 (W6, 2026-07-06):
+
+- **No PR, no merge.** `submit()` commits and pushes straight to the `interns/<handle>` branch you're checked out on. Pushing *is* the submission.
+- **Your whole workspace is shared, not just positions/meta.** Code secrecy between interns is no longer a goal in Phase 2 — see `sync_peers.sh` in `njt-submissions`.
+- **`main` is a template only** — new branches are created from it, but nobody merges back into it.
+
+Everything else below (kinds, universe, cost model, data gotchas) is unchanged.
+
+---
+
 ## 1. What you submit
 
 **What to submit and when is defined by your admin's program plan** — that's the single source of truth, and it's announced separately. This file is about *how* submissions work, not the schedule; if the two ever disagree, follow the plan and tell your admin.
 
-One thing that trips people up: **kind is never gated by code.** `submit()` accepts any kind; nothing is auto-rejected on kind, universe, or frequency. What actually governs a submission is (a) what you choose to submit and (b) your admin's review at the merge. The "themes" are a learning guide, not a filter.
+One thing that trips people up: **kind is never gated by code.** `submit()` accepts any kind; nothing is auto-rejected on kind, universe, or frequency. What actually governs a submission is (a) what you choose to submit and (b) your admin's periodic spot-checks (§6). The "themes" are a learning guide, not a filter.
 
 **The three kinds** (set `KIND` in your file; the engine is chosen from it):
 
@@ -182,13 +194,9 @@ Pick the normalization that matches what you want:
 - Columns are valid symbols
 - NaN ratio isn't excessive
 
-The admin additionally checks before merging:
-- `meta.json` schema (all required keys present)
-- preset is `binance_um_perpetual`
-- no `cost_overrides`
-- no symbol typos
+There's no admin merge gate anymore, so nothing else is checked automatically — the checklist below (§8) is on you. The admin still spot-checks `meta.json` schema / preset / `cost_overrides` / symbol typos periodically, since these still matter for fair comparison in dash.
 
-After merge, if your alpha isn't showing up in dash next to others, ping the admin.
+If your alpha isn't showing up in dash, check: (1) you're on `interns/<handle>`, not `main` (§0), (2) `submit()` actually printed `pushed`, not "nothing changed", (3) for peers' alphas, you've run `tools/sync_peers.sh`.
 
 ---
 
@@ -202,12 +210,11 @@ Use a fresh `strategy_id` for each iteration:
 Each lives in its own folder → dash shows them all → you can see your own progression visibly.
 
 **Forbidden:**
-- Deleting earlier-version folders (history is preserved)
-- Overwriting a `positions.parquet` that's already merged
+- Deleting earlier-version folders (history is preserved — and it's your own branch's history, but other interns and the admin may be looking at old versions)
 
 ---
 
-## 8. Pre-PR checklist — run through this every time
+## 8. Pre-submit checklist — run through this every time
 
 - [ ] `KIND` is set (`margin_weight` default; any kind is accepted — pick the one matching your idea)
 - [ ] `PRESET = "binance_um_perpetual"`

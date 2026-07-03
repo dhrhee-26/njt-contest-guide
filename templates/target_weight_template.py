@@ -118,9 +118,9 @@ if __name__ == "__main__":
 # ─── (Optional) Submit ────────────────────────────────────────────────────────
 # When you're happy with the alpha, uncomment the block below to push it to
 # your branch of njt-submissions. `submit()` writes positions.parquet +
-# meta.json under /submissions/interns/<your-handle>/<strategy_id>/, then
-# git add / commit / push, then prints a clickable PR-creation URL. Your
-# handle is auto-detected from the current branch name.
+# meta.json under interns/<your-handle>/<strategy_id>/, then commits + pushes
+# your whole workspace (code included) straight to the branch you're on —
+# no PR, nothing to merge. Run tools/sync_peers.sh to see everyone else's.
 #
 # if __name__ == "__main__":
 #     from framework import submit

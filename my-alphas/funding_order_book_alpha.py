@@ -178,7 +178,8 @@ if __name__ == "__main__":
 # When you're happy with the alpha, uncomment the block below to push it to your
 # branch of njt-submissions. `submit()` converts order_book → target_weight
 # positions automatically (original KIND is preserved as `source_kind` in
-# meta.json), then git add / commit / push, then prints a clickable PR URL.
+# meta.json), then commits + pushes your whole workspace (code included)
+# straight to the branch you're on — no PR, nothing to merge.
 #
 # if __name__ == "__main__":
 #     from framework import submit

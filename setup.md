@@ -229,7 +229,7 @@ That message — including "does not provide shell access" — means success. If
 
 ### 4.1 Clone this guide repo into `~/njt-contest`
 
-This repo contains the `docker-compose.yml`, all the documentation (including the file you're reading), and the starter templates. Cloning it gives you everything in one shot.
+This repo contains the `docker-compose.yml`, all the documentation (including the file you're reading), the starter templates, and reference starter alphas under `my-alphas/`. Cloning it gives you everything in one shot.
 
 ```bash
 git clone https://github.com/dhrhee-26/njt-contest-guide.git ~/njt-contest
@@ -249,32 +249,33 @@ ls
 Expected (in some order):
 ```
 README.md           docker-compose.yml    setup.md
-alpha_anatomy.md    rules.md              templates
+alpha_anatomy.md    rules.md              templates    my-alphas
 ```
 
-### 4.2 Clone the submissions repo
+### 4.2 Clone the submissions repo AS your workspace, and check out your branch
 
 ```bash
-git clone git@github.com:dhrhee-26/njt-submissions.git
-```
-
-You'll see a few lines like "Cloning into 'njt-submissions'..." and then a prompt. A new folder `njt-submissions` appeared.
-
-(This uses SSH because the submissions repo is private. Your SSH key from Part 3 handles the auth — no password prompt.)
-
-### 4.3 Tell submit() your handle
-
-You do **not** check out a branch. Leave `njt-submissions` on `main` and write a
-one-line `.env` so the container knows which branch is yours:
-
-```bash
-echo "NJT_HANDLE=YOUR-HANDLE" > .env
+git clone git@github.com:dhrhee-26/njt-submissions.git workspace
+cd workspace
+git checkout interns/YOUR-HANDLE
+cd ..
 ```
 
 **Replace `YOUR-HANDLE`** with the handle the admin gave you (e.g., `alice`).
-Run this from `~/njt-contest` (the folder with `docker-compose.yml`), not inside
-`njt-submissions`. `submit()` pushes to `interns/YOUR-HANDLE` on its own and
-creates that branch from `main` on your first submit — nothing to check out.
+
+(Cloning uses SSH because the submissions repo is private. Your SSH key from Part 3 handles the auth — no password prompt.)
+
+If `git checkout interns/YOUR-HANDLE` says *"pathspec did not match"*, the admin hasn't created your branch yet — ask them to create `interns/YOUR-HANDLE` on `dhrhee-26/njt-submissions`.
+
+This `workspace/` folder — checked out on **your** branch — is where everything happens from now on: your alpha code, your notebooks, and (once you submit) your results. It's a normal git repo you can `git add` / `git commit` / `git push` like any other; `submit()` just automates that from inside Jupyter.
+
+### 4.3 Copy the starter alphas into your workspace
+
+```bash
+cp my-alphas/my_first_alpha.py my-alphas/my_first_order_book_alpha.py workspace/
+```
+
+Copies the guide's two starter alphas (one per pattern) into your workspace, so they show up in Jupyter Lab in Part 6. You can also just write a file from scratch instead — nothing depends on these being there.
 
 ### 4.4 Verify the final layout
 
@@ -286,8 +287,8 @@ ls
 
 Expected (in some order):
 ```
-README.md           docker-compose.yml    my-alphas         setup.md
-alpha_anatomy.md    rules.md              njt-submissions   templates
+README.md           docker-compose.yml    my-alphas    setup.md
+alpha_anatomy.md    rules.md              templates    workspace
 ```
 
 If all of those are there, Part 4 is done.
@@ -318,7 +319,7 @@ Expected: a line that shows `njt` with status `Up` or `running`.
 
 ```
 NAME    IMAGE                                       STATUS              PORTS
-njt     ghcr.io/dhrhee-26/njt-sdk-dist:main         Up 30 seconds       0.0.0.0:8050->8050/tcp, 0.0.0.0:8888->8888/tcp
+njt     ghcr.io/dhrhee-26/njt-dash:main         Up 30 seconds       0.0.0.0:8050->8050/tcp, 0.0.0.0:8888->8888/tcp
 ```
 
 If `STATUS` says `Exited` or `Restarting`, something went wrong. See Troubleshooting.
@@ -341,7 +342,7 @@ You'll do this inside the **Jupyter Lab** browser tab (http://localhost:8888).
 ### 6.1 Tour of Jupyter Lab
 
 When you first open it, you'll see:
-- **Left sidebar**: a file browser. It shows two starter alphas shipped with the guide — one per pattern:
+- **Left sidebar**: a file browser rooted at your `workspace/`. It shows the two starter alphas you copied in Part 4.3 — one per pattern:
   - `my_first_alpha.py` — `target_weight` pattern (continuous portfolio reweights)
   - `my_first_order_book_alpha.py` — `order_book` pattern (discrete entry/exit orders)
 - **Main area**: a Launcher with tiles like "Notebook", "Terminal", "File", etc.
@@ -353,7 +354,7 @@ Double-click `my_first_alpha.py` in the left sidebar to open it. It's a short, c
 
 The walkthrough below uses `my_first_alpha.py`, but everything works identically for `my_first_order_book_alpha.py` if you'd rather start from the event-driven pattern — open that file instead.
 
-(Want to restart from the canonical template? Copy `~/njt-contest/templates/target_weight_template.py` over `my_first_alpha.py` — or `templates/order_book_template.py` over `my_first_order_book_alpha.py` — from a host terminal.)
+(Want to restart from the canonical template? From a host terminal: `cp ~/njt-contest/templates/target_weight_template.py ~/njt-contest/workspace/my_first_alpha.py` — or `templates/order_book_template.py` over `my_first_order_book_alpha.py`.)
 
 ### 6.3 Create a notebook to run it
 
@@ -411,11 +412,11 @@ You'll see:
 
 Click the Strategies dropdown. You'll see groups:
 - **benchmark** — buy-hold strategies for each major + an equal-weight basket (10 strategies)
-- **submission** — populated with submissions merged into `njt-submissions/main` (empty until the first interns submit)
+- **submission** — your own submissions, plus any peers you've pulled in with `sync_peers.sh` (Part 9) — empty until you submit your first alpha
 
 Select one or two strategies, then click **RUN BACKTEST**. After a few seconds, NAV charts, drawdown, and a statistics table appear. Spend a few minutes exploring.
 
-After you submit your own alpha (next part) and the admin merges your PR, it will appear under the **submission** group in this same dropdown.
+After you submit your own alpha (next part), it appears under the **submission** group in this same dropdown — no waiting on anyone.
 
 ---
 
@@ -437,36 +438,43 @@ submit(
 )
 ```
 
-That's it — no handle, no git commands. `submit()` figures out your handle from your branch name (`interns/YOUR-HANDLE`), runs the alpha, writes `positions.parquet` + `meta.json`, then `git add` / `commit` / `push` for you.
+`submit()` writes `positions.parquet` + `meta.json` under `interns/YOUR-HANDLE/my_first_alpha_v1/`, then `git add -A` (your **whole** workspace — the alpha file too, not just the results folder), commits, and pushes straight to the branch you're on (it must be `interns/YOUR-HANDLE` — that's what you checked out in Part 4.2).
 
 Press Shift+Enter. After a few seconds, you should see something like:
 
 ```
 ✓ submitted: interns/YOUR-HANDLE/my_first_alpha_v1
-  commit:    abc1234567  on branch interns/YOUR-HANDLE
-  open PR:   https://github.com/dhrhee-26/njt-submissions/compare/main...interns/YOUR-HANDLE?expand=1
+  commit:    abc1234567  on interns/YOUR-HANDLE (pushed)
 ```
 
-### Open the PR
-
-Click (or copy) the **open PR** URL. GitHub opens the "Comparing changes" page with a green **Create pull request** button — click it, leave the title/body as-is (or edit if you want), then click **Create pull request** again to submit.
-
-The admin will review and merge it.
-
-After merge, the next time you `git pull origin main` (see daily routine below), your alpha appears in the **submission** group of the dash dropdown — alongside other interns'.
+That's it — nothing else to do. No PR, nobody to wait on for merge. Refresh http://localhost:8050 and your alpha is already in the **submission** group.
 
 ### Submitting again later
 
 When you iterate and want to push a new version:
 
-- **Same `strategy_id`** → overwrites your previous submission. `submit()` re-pushes; if you have an open PR for your branch, GitHub updates it automatically (no need to open a new one).
-- **New `strategy_id`** (e.g., `my_first_alpha_v2`) → creates a separate folder. Your branch will have both submissions; admins can compare them.
+- **Same `strategy_id`** → overwrites your previous submission (a new commit on your branch).
+- **New `strategy_id`** (e.g., `my_first_alpha_v2`) → creates a separate folder. Both stay on your branch — you (and anyone syncing your branch) can compare them.
 
-If positions are byte-identical to the previous push, `submit()` prints "nothing to commit" and skips the push — no harm in running it again.
+If nothing changed since your last commit, `submit()` says so and skips pushing — no harm in running it again.
 
 ---
 
-## Part 9 — Daily routine
+## Part 9 — See other interns' alphas — `sync_peers.sh`
+
+There's no merge to wait for — pull each peer's branch in yourself, any time:
+
+```bash
+cd ~/njt-contest/workspace
+./tools/sync_peers.sh              # every active interns/* branch
+./tools/sync_peers.sh alice bob    # or just specific handles
+```
+
+This checks out each peer's full branch under `workspace/peers/<peer>/` (their code — agent, notebooks, everything) and regenerates `universe.json`. Refresh http://localhost:8050 — their alphas now show up in the **submission** group too. Open `peers/<peer>/` in Jupyter Lab's file browser to read their actual code. Re-run the script any time to pick up new pushes.
+
+---
+
+## Part 10 — Daily routine
 
 Once setup is done, your daily workflow is just:
 
@@ -479,10 +487,8 @@ docker compose up -d
 # Iterate on your alpha in Jupyter Lab...
 # Submit via a cell when ready (Part 8 pattern)...
 
-# Pull others' merged submissions to see in dash (you stay on main)
-cd njt-submissions
-git pull origin main
-cd ..
+# See peers' latest work (optional, any time)
+cd workspace && ./tools/sync_peers.sh && cd ..
 
 # End of day
 docker compose down
@@ -501,11 +507,12 @@ That's it.
 | Host `git` says `fatal: ... ~/.gitconfig: Is a directory`, or container says `unable to auto-detect email address` even though you set `user.email` | You ran `docker compose up` before Part 3.2, so Docker created `~/.gitconfig` as an empty folder instead of a file | `docker compose down`, then `rm -rf ~/.gitconfig`, then redo **Part 3.2** (`git config --global user.name/email …`), then `docker compose up -d`. Verify with `test -f ~/.gitconfig && echo ok` |
 | `docker compose up` says "port already in use" (8888 or 8050) | Another program is using that port | Run `docker compose down`. Find the offender: Mac/Linux `lsof -i :8888`, Windows `netstat -ano \| findstr 8888`. Stop that program. Try `up -d` again |
 | Browser at http://localhost:8888 says "This site can't be reached" | Container failed to start, or browser cached old result | Run `docker compose ps` — if STATUS isn't "Up", run `docker compose logs njt` to see why. If status is Up, wait 20 seconds, hard-refresh browser (Cmd+Shift+R) |
-| `submit()` says `could not determine your contest handle` | `NJT_HANDLE` isn't set — no `.env`, or it's in the wrong folder | From `~/njt-contest` (the folder with `docker-compose.yml`): `echo "NJT_HANDLE=YOUR-HANDLE" > .env`, then `docker compose up -d --force-recreate` so the container picks it up |
+| `submit()` says `you're on branch 'main', not interns/<handle>` | You cloned `njt-submissions` but didn't check out your branch (Part 4.2) | `cd ~/njt-contest/workspace && git checkout interns/YOUR-HANDLE`, then `docker compose down && docker compose up -d` |
+| `git checkout interns/YOUR-HANDLE` says `pathspec did not match` | The admin hasn't created your branch yet | Ask the admin to create `interns/YOUR-HANDLE` on `dhrhee-26/njt-submissions` |
 | `git clone git@github.com:...` says `Permission denied (publickey)` | SSH key isn't registered with GitHub | Revisit **Part 3.4** — make sure the contents of `~/.ssh/id_ed25519.pub` are pasted at https://github.com/settings/keys. Then `ssh -T git@github.com` should print "Hi `<your-username>`!" |
 | Container log: `ERROR — no SSH private key found under ~/.ssh/` | The host has no SSH key, so the container has nothing to push with | Run **Part 3.3** + **3.4** on the host, then `docker compose down && docker compose up -d` |
-| `submit()` pushes to the wrong handle | `NJT_HANDLE` in `.env` has a typo, or the container started before you wrote `.env` | Fix `~/njt-contest/.env`, then `docker compose up -d --force-recreate`. (Leaving `njt-submissions` on `main` is correct — you no longer check out your branch.) |
-| `submit()` says `not a git repository` | Container was started outside `~/njt-contest` (mount path wrong) | `docker compose down`, `cd ~/njt-contest`, `docker compose up -d` |
+| `submit()` says `not a git repository` | Container was started outside `~/njt-contest`, or `workspace/` wasn't cloned (mount path wrong) | `docker compose down`, confirm `~/njt-contest/workspace/.git` exists, `cd ~/njt-contest`, `docker compose up -d` |
+| `tools/sync_peers.sh` shows a peer with "no commits yet" | That intern hasn't submitted anything yet | Nothing to fix — re-run the script later |
 | `Alpha is not defined` in the submission cell | You ran the submission cell without first running the cell that defines `Alpha` | Run the alpha definition cell first, then the submission cell |
 | Docker image download is very slow | Slow network, or peak hours | Be patient on the first pull. Subsequent updates are much smaller |
 | `docker compose pull` says "denied: pulling from public registry forbidden" | Some corporate networks block GHCR | Try from a different network, or ask the admin |
@@ -525,7 +532,7 @@ Now that everything works, the recommended reading order is:
 
 1. [`README.md`](./README.md) — the concise quick reference
 2. [`alpha_anatomy.md`](./alpha_anatomy.md) — the Alpha class contract in depth
-3. [`rules.md`](./rules.md) — contest rules and pre-PR checklist
+3. [`rules.md`](./rules.md) — contest rules and pre-submit checklist
 4. [`templates/target_weight_template.py`](./templates/target_weight_template.py) — starter for cross-sectional alphas
 5. [`templates/order_book_template.py`](./templates/order_book_template.py) — starter for event-driven alphas
 

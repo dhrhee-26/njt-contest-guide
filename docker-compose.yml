@@ -1,55 +1,45 @@
-# NJT contest — intern-facing one-line bring-up.
+# NJT contest — intern-facing one-line bring-up. (Phase 2 — no PR, no merge.)
 #
 # Intern setup (one time):
 #   - generate an SSH key + add it to GitHub  (see setup.md Part 3)
 #   git clone https://github.com/dhrhee-26/njt-contest-guide.git ~/njt-contest
 #   cd ~/njt-contest
-#   git clone git@github.com:dhrhee-26/njt-submissions.git
-#   echo "NJT_HANDLE=<your-handle>" > .env     # tells submit() which branch is yours
+#   git clone git@github.com:dhrhee-26/njt-submissions.git workspace
+#   cd workspace && git checkout interns/<your-handle> && cd ..
 #
-# You do NOT need to check out interns/<handle> — leave njt-submissions on
-# `main` and just `git pull` to see merged + peer alphas. submit() pushes to
-# your branch on its own (NJT-032).
+# `workspace/` (your interns/<handle> branch) IS your workspace from here on
+# — code and results together, no separate my-alphas/submissions split.
 #
 # Daily:
 #   docker compose up -d                  # http://localhost:8888 + :8050
 #   docker compose down                   # stop
 #
-# Submission from inside Jupyter — one call, from any branch:
+# Submission from inside Jupyter:
 #   from framework import submit
 #   submit(Alpha(), strategy_id="my_alpha_v1", preset="binance_um_perpetual")
 #
-# Under the hood, submit() runs export_submission (positions.parquet +
-# meta.json under /submissions/interns/<handle>/<strategy_id>/), then commits
-# + pushes that folder to origin/interns/<handle> through a throwaway git
-# worktree (your checked-out branch never moves), and prints the PR URL. The
-# container's entrypoint converts the /submissions origin URL to SSH at startup
-# if the host cloned via HTTPS, and uses the SSH key mounted from the host below.
+# submit() runs export_submission (positions.parquet + meta.json under
+# interns/<handle>/<strategy_id>/), then `git add -A` (your whole workspace,
+# code included) + commit + push to the branch you're currently on. No PR —
+# pushing to your own branch is the submission. To see peers, run
+# workspace/tools/sync_peers.sh. The container's entrypoint converts the
+# workspace's origin URL to SSH at startup if you cloned via HTTPS, using the
+# SSH key mounted from the host below.
 
 services:
   njt:
     # NOTE: pinned to :main until the first v* release tag lands a :latest.
-    # `:latest` is only published on v* tag pushes (see njt-sdk-dist CI),
-    # and the v0.1.0 push is currently delayed by a GitHub Actions outage.
-    image: ghcr.io/dhrhee-26/njt-sdk-dist:main
+    image: ghcr.io/dhrhee-26/njt-dash:main
     container_name: njt
-    environment:
-      # Your contest handle — submit() pushes to interns/$NJT_HANDLE without
-      # needing that branch checked out. Set once in ~/njt-contest/.env:
-      #   echo "NJT_HANDLE=<your-handle>" > .env
-      # (If unset, submit() falls back to the checked-out interns/<handle>.)
-      - NJT_HANDLE=${NJT_HANDLE:-}
     ports:
       - "8888:8888"        # Jupyter Lab
       - "8050:8050"        # dash UI
     volumes:
-      # Intern's alpha workspace (Jupyter Lab root).
-      - ./my-alphas:/workspace
-
-      # Cloned njt-submissions repo (intern's branch checked out on the host).
-      # submit() / export_submission(submissions_root="/submissions") write
-      # here, and the dash UI reads from here.
-      - ./njt-submissions:/submissions
+      # Your interns/<handle> branch, checked out on the host — the single
+      # source of truth for code AND results. Jupyter Lab root, submit()'s
+      # commit/push target, and dash's --submissions root are all this one
+      # directory.
+      - ./workspace:/workspace
 
       # Persist Binance Vision download cache across container restarts.
       # Without this, every `docker compose down/up` cycle wipes ~/.cache/feeds
@@ -58,7 +48,7 @@ services:
       - ./data-cache:/home/njt/.cache
 
       # Host git config + SSH key, read-only, so `git push` from inside the
-      # container can authenticate as the intern. No second auth setup needed.
+      # container can authenticate as you. No second auth setup needed.
       #
       # Mount target paths match the image's $HOME (=/home/njt, set in the
       # Dockerfile). Mounting to /root/* would make the files visible inside

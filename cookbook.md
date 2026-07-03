@@ -6,7 +6,7 @@ A practical, example-driven companion to `README.md`, `rules.md`, and
 `alpha_anatomy.md`. Everything here is copy-paste runnable from a Jupyter cell
 (http://localhost:8888). It answers the questions that come up most:
 
-0. [One-time setup — tell `submit()` your handle (`.env`)](#0-one-time-setup)
+0. [One-time setup — clone your branch as `workspace/`](#0-one-time-setup)
 1. [Loading & updating data — every `Dataset.load` parameter](#1-loading--updating-data)
 2. [Loading every symbol at once (whole-universe panel)](#2-whole-universe-panel-load)
 3. [Liquidity — why thin coins are filtered, and how the backtest models them](#3-liquidity)
@@ -19,31 +19,23 @@ A practical, example-driven companion to `README.md`, `rules.md`, and
 
 ## 0. One-time setup
 
-Two clones + one tiny file, then you're done — **you never check out a branch.**
+Two clones, then you're done:
 
 ```bash
 git clone https://github.com/dhrhee-26/njt-contest-guide.git ~/njt-contest
 cd ~/njt-contest
-git clone git@github.com:dhrhee-26/njt-submissions.git     # leave it on main
-echo "NJT_HANDLE=<your-handle>" > .env                     # ← this is the whole "setup"
+git clone git@github.com:dhrhee-26/njt-submissions.git workspace
+cd workspace && git checkout interns/<your-handle> && cd ..
 docker compose up -d                                       # http://localhost:8888 + :8050
 ```
 
-**What `.env` is:** a one-line file in `~/njt-contest/` (next to `docker-compose.yml`)
-holding your contest handle, e.g.:
+`workspace/` — checked out on **your** branch — is mounted as `/workspace` and is
+where everything happens: your alpha code, notebooks, and (via `submit()`)
+your results. There's no `.env`, no handle indirection — `submit()` reads your
+handle straight off the branch you're on.
 
-```
-NJT_HANDLE=alice
-```
-
-`docker compose` reads `.env` automatically and passes `NJT_HANDLE` into the
-container, where `submit()` uses it to push your work to `interns/<your-handle>`
-— without you ever switching branches. Keep `njt-submissions` on `main` and just
-`git pull` to see merged + peer alphas (see §7).
-
-- Change/fix it later: edit `~/njt-contest/.env`, then `docker compose up -d --force-recreate` so the container picks up the new value.
-- Already cloned and on a branch from the old flow? Just add the `.env`, then `cd njt-submissions && git checkout main && cd ..` once. (Without `.env`, `submit()` still falls back to whatever `interns/<handle>` branch is checked out — nothing breaks.)
-- **Never** put a password, GitHub token, or your private SSH key in `.env` — only the handle.
+- Wrong branch? `cd workspace && git checkout interns/<your-handle>`, then `docker compose down && docker compose up -d`.
+- To see other interns' work, run `workspace/tools/sync_peers.sh` (see §7).
 
 ---
 
@@ -441,29 +433,32 @@ Filtering is purely a view over the table; it doesn't fetch or change anything.
 
 ## 7. Seeing others' submissions
 
-The dash's **Strategy dropdown** lists everything under
-`njt-submissions/interns/`. Because the dash reads the filesystem, what you see
-depends on what's in your local `njt-submissions` checkout:
+The dash's **Strategy dropdown** lists everything under `workspace/interns/`.
+Because the dash reads the filesystem, what you see depends on what's
+physically in your `workspace/` checkout:
 
 1. **Your own alphas show immediately** — the moment you `submit()`, the files
-   are written into `njt-submissions/interns/<your-handle>/…`, so they appear in
-   the dropdown (even before the admin merges your PR).
-2. **To see peers' merged alphas**, pull the canonical `main` (you stay on `main`
-   — no branch checkout):
+   land in `workspace/interns/<your-handle>/…`, so they appear in the dropdown
+   right away. No PR, nothing to wait on.
+2. **To see peers' alphas**, run the sync script from your workspace:
    ```bash
-   cd ~/njt-contest/njt-submissions
-   git pull origin main
+   cd ~/njt-contest/workspace
+   ./tools/sync_peers.sh              # every active interns/* branch
+   ./tools/sync_peers.sh alice bob    # or just specific handles
    ```
-   The container's `/submissions` reflects the host instantly (same files). The
-   dropdown auto-refreshes within ~30s (it polls for new submissions); if a
-   freshly-pulled alpha doesn't show, `docker compose restart njt` and refresh
-   the tab.
+   This checks out each peer's branch read-only and symlinks their
+   `interns/<peer>/` folder in next to your own, then regenerates
+   `universe.json`. The dropdown auto-refreshes within ~30s (it polls for new
+   submissions); if a freshly-synced alpha doesn't show, `docker compose
+   restart njt` and refresh the tab.
 
 Strategies are grouped in the dropdown — built-in **benchmarks** (BTC buy-hold,
 MAJORS_9 equal-weight, …) vs. **submissions** (`<handle> · <name>`). Pick two and
 the dash overlays their NAV / drawdown / stats so you can compare your alpha
 against a benchmark or a peer's.
 
-> Reminder: you no longer check out `interns/<handle>`. Set your handle once in
-> `~/njt-contest/.env` (`NJT_HANDLE=<your-handle>`), keep `njt-submissions` on
-> `main`, and `submit()` pushes to your branch on its own.
+Their code is right there too, not just results — `sync_peers.sh` checks out
+each peer's full branch under `workspace/peers/<peer>/` (agent code,
+notebooks, everything), and `workspace/interns/<peer>/` is just a symlink into
+that checkout's results folder so dash finds it. Open
+`peers/<peer>/` in Jupyter Lab's file browser to read their actual code.

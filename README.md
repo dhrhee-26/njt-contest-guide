@@ -1,22 +1,22 @@
 # NJT Contest — Intern Guide
 
-You design crypto alpha strategies, and everyone's results are compared in a shared dash UI. Your alpha source code stays on your own machine — only the **results** (positions) are submitted via PR.
+You design crypto alpha strategies, and everyone's results are compared in a shared dash UI. Your `interns/<handle>` branch on `njt-submissions` **is** your workspace — code and results live together there, and you push directly to it. No PR, no admin merge; code is visible to your fellow interns by design (this is Phase 2 — see `rules.md` §0 if you're coming from Phase 1's PR-based, code-hidden model).
 
 ---
 
 ## End-to-end flow
 
 ```
-Setup  →  Write alpha  →  Local backtest  →  export_submission  →  PR  →  After merge: compare in dash
+Setup  →  Write alpha  →  Local backtest  →  submit() (commit + push your branch)  →  sync_peers.sh: compare in dash
 ```
 
-The contest only exposes you to **one Docker image + one git repo**:
+The contest exposes you to **one Docker image + one git repo**:
 
 | Thing | Your role |
 |---|---|
-| **`ghcr.io/dhrhee-26/njt-sdk-dist`** (Docker image, public) | A container with the SDK + dash + Jupyter Lab pre-installed. One `docker pull`. |
-| **`dhrhee-26/njt-submissions`** (git repo) | Where you push your `positions.parquet + meta.json` via PR. Also where you pull other interns' merged submissions from. |
-| (SDK source / dash code / agent / etc.) | You don't need to look at these — all baked into the image. |
+| **`ghcr.io/dhrhee-26/njt-dash`** (Docker image, public) | A container with the SDK + dash + Jupyter Lab pre-installed. One `docker pull`. |
+| **`dhrhee-26/njt-submissions`** (git repo) | Your `interns/<handle>` branch is your whole workspace — check it out and it's mounted straight into the container. `submit()` pushes there directly. |
+| **`njt-sdk` / `njt-dash`** (public source) | Not baked-in-only anymore — feel free to read the source if you (or your agent) want to understand the engine internals. |
 
 ---
 
@@ -30,21 +30,22 @@ Prerequisites:
 
 ```bash
 # 1.1 Clone this guide repo into ~/njt-contest.
-#     It contains docker-compose.yml, the docs, the templates, and a
-#     ready-to-run starter at my-alphas/my_first_alpha.py.
+#     It contains docker-compose.yml, the docs, the templates, and
+#     reference starters at my-alphas/*.py (copy whichever you like below).
 git clone https://github.com/dhrhee-26/njt-contest-guide.git ~/njt-contest
 cd ~/njt-contest
 
-# 1.2 Clone the submissions repo (SSH — private) — leave it on `main`
-git clone git@github.com:dhrhee-26/njt-submissions.git
+# 1.2 Clone the submissions repo (SSH — private) as `workspace`, and check
+#     out YOUR branch directly. This IS your workspace from here on.
+git clone git@github.com:dhrhee-26/njt-submissions.git workspace
+cd workspace && git checkout interns/<your-name> && cd ..
 
-# 1.3 Tell submit() your handle (one line; no branch checkout needed)
-echo "NJT_HANDLE=<your-name>" > .env
+# 1.3 (optional) start from a reference alpha instead of a blank file
+cp my-alphas/my_first_alpha.py workspace/my_first_alpha.py
 ```
 
-`<your-name>` is the handle the admin gives you. You do **not** check out
-`interns/<your-name>` — leave `njt-submissions` on `main` and `git pull` to see
-merged + peer alphas; `submit()` pushes to your branch on its own (NJT-032).
+`<your-name>` is the handle the admin gives you (ask them to create
+`interns/<your-name>` on `njt-submissions` if the checkout fails).
 
 Resulting folder layout:
 
@@ -53,14 +54,16 @@ Resulting folder layout:
 ├── docker-compose.yml                          ← container config (image, ports, mounts)
 ├── README.md / setup.md / ...                  ← these guide docs
 ├── templates/                                  ← reference template alphas
-├── my-alphas/                                  ← your alpha files (mounted into the container as /workspace)
+├── my-alphas/                                  ← reference starters (copy from here, not mounted)
 │   ├── my_first_alpha.py                       ← target_weight starter (cross-sectional, 2 assets)
 │   ├── my_first_order_book_alpha.py            ← order_book starter (event-driven, single asset)
 │   ├── funding_order_book_alpha.py             ← order_book example using the funding rate
 │   ├── universe_momentum_alpha.py              ← target_weight over the liquid universe (panel)
 │   └── breakout_order_book_alpha.py            ← order_book Donchian breakout on a liquid coin
-└── njt-submissions/                            ← cloned submissions repo (mounted as /submissions)
-    └── interns/<your-name>/                    ← your submissions accumulate here
+└── workspace/                                  ← YOUR interns/<your-name> branch (mounted as /workspace)
+    ├── my_first_alpha.py                       ← your code — organize however you like
+    ├── interns/<your-name>/                    ← submit() writes results here (dash-readable)
+    └── tools/sync_peers.sh                     ← pulls in everyone else's branch to compare
 ```
 
 ---
@@ -76,8 +79,8 @@ Done. Open in browser:
 
 | URL | What |
 |---|---|
-| http://localhost:8888 | **Jupyter Lab** — `my-alphas/` is the root, SDK + dash pre-installed |
-| http://localhost:8050 | **dash UI** — auto-detects submissions, compare your alpha against others |
+| http://localhost:8888 | **Jupyter Lab** — `workspace/` (your branch) is the root, SDK + dash pre-installed |
+| http://localhost:8050 | **dash UI** — reads `workspace/`; run `tools/sync_peers.sh` first to see other interns' alphas too |
 
 When done:
 
@@ -130,7 +133,7 @@ Or run from Jupyter Lab's Terminal:
 python /workspace/my_first_alpha.py
 ```
 
-(Inside the container, `/workspace` = host's `~/njt-contest/my-alphas/`.)
+(Inside the container, `/workspace` = host's `~/njt-contest/workspace/` — your `interns/<handle>` branch checkout.)
 
 ---
 
@@ -193,7 +196,7 @@ res.cost                 # pd.Series — daily cost in return units
 dash is already running at http://localhost:8050. Refresh the browser → Strategy dropdown:
 
 - **alpha group** — 11 built-in reference alphas (including `MAJORS_9_EW` benchmark)
-- **submission group** — your own + merged submissions from other interns (after §8)
+- **submission group** — your own submissions, plus everyone else's once you've run `tools/sync_peers.sh` (§8)
 - **benchmark group** — 9 majors buy-hold + equal-weight
 
 All evaluated under the same cost preset → fair comparison.
@@ -233,40 +236,34 @@ submit(
 )
 ```
 
-`submit()` runs `export_submission` (writes `positions.parquet` + `meta.json` under `/submissions/interns/<your-handle>/rsi_reversion_v1/`), then commits + pushes that folder to `origin/interns/<your-handle>` through a throwaway git worktree (your checked-out branch never moves), then prints the PR-creation URL. Your handle comes from `NJT_HANDLE` (your `.env`); the branch is created from `main` automatically on your first submit.
+`submit()` runs `export_submission` (writes `positions.parquet` + `meta.json` under `/workspace/interns/<your-handle>/rsi_reversion_v1/`), then `git add -A` — your **whole** workspace, code included, not just that folder — commits, and pushes straight to the branch you're on. No PR, nothing for the admin to merge: pushing to your own branch *is* the submission.
 
 Output looks like:
 
 ```
 ✓ submitted: interns/<your-handle>/rsi_reversion_v1
-  commit:    abc1234567  on branch interns/<your-handle>
-  open PR:   https://github.com/dhrhee-26/njt-submissions/compare/main...interns/<your-handle>?expand=1
+  commit:    abc1234567  on interns/<your-handle> (pushed)
 ```
 
-### 7.1 Open the PR
+You must already be checked out on `interns/<your-handle>` for this to work (Part 1.2 above) — `submit()` refuses to push if you're on some other branch.
 
-Click the printed URL. GitHub opens the "Comparing changes" page; click **Create pull request**, then **Create pull request** again to submit. The admin then reviews + updates `universe.json` + merges.
+### 7.1 What if nothing changed?
 
-If you push again to the same branch (any new `submit()` call), GitHub updates the open PR automatically — no need to open a new one.
-
-### 7.2 What if positions are unchanged?
-
-`submit()` checks whether anything actually changed since the last push. If your positions are byte-identical to the previous submission, it prints "positions unchanged — nothing to commit" and skips the push. Safe to re-run as many times as you want.
+`submit()` checks whether anything actually changed since your last commit. If not, it prints a message and skips creating an empty commit. Safe to re-run as many times as you want.
 
 ---
 
-## 8. After merge — see your alpha alongside everyone else's
+## 8. See everyone else's alphas — `sync_peers.sh`
 
-From the host terminal (or Jupyter Terminal):
+There's no merge to pull from anymore — instead, pull each peer's branch in directly:
 
 ```bash
-cd ~/njt-contest/njt-submissions
-git pull origin main        # you stay on main — no checkout needed
+cd ~/njt-contest/workspace
+./tools/sync_peers.sh              # every active interns/* branch
+./tools/sync_peers.sh alice bob    # or just specific handles
 ```
 
-Once the host's `njt-submissions/` updates, the container's `/submissions` reflects it instantly (same files, no copy). **No container restart needed.**
-
-Refresh http://localhost:8050 → other interns' alphas appear in the submission group of the Strategy dropdown.
+This checks out each peer's branch read-only alongside yours (as `interns/<peer>/` symlinks — see the script for how) and regenerates `universe.json`. Refresh http://localhost:8050 → their alphas (and code, if you want to look — `cd workspace/interns/<peer>` or browse it in Jupyter Lab's file browser) appear in the submission group of the Strategy dropdown. Re-run it any time to pick up their latest pushes.
 
 ---
 
@@ -368,7 +365,8 @@ Details → [`rules.md`](./rules.md). The big ones:
 3. **Symbol names are lowercase USDT-perp** — `btcusdt`, `ethusdt`, ... (not `BTC`, `BTC/USDT`, or uppercase).
 4. **Typo'd / non-existent symbols** — the universe is any Binance USDT-perp (`rules.md` §2), but the exact form is lowercase `<base>usdt`; spot-only tokens / other quotes won't fetch.
 5. **`cost_overrides` in `meta.json` is forbidden** — zeroing costs to inflate Sharpe is a fairness violation.
-6. **`submissions_root` is `/submissions`** — in-container path. Auto-syncs with host's `~/njt-contest/njt-submissions`.
+6. **`submissions_root` is `/workspace`** — in-container path. Auto-syncs with host's `~/njt-contest/workspace` (your `interns/<handle>` branch).
+7. **You must be on `interns/<handle>`, not `main`** — `submit()` refuses to push otherwise (Phase 2; Phase 1 used to want you on `main`).
 
 ---
 

@@ -133,9 +133,9 @@ if __name__ == "__main__":
 # When you're happy with the alpha, uncomment the block below to push it to
 # your branch of njt-submissions. `submit()` converts order_book → target_weight
 # positions automatically (the on-disk format is unified; original KIND is
-# preserved as `source_kind` in meta.json), then git add / commit / push, then
-# prints a clickable PR-creation URL. Your handle is auto-detected from the
-# current branch name.
+# preserved as `source_kind` in meta.json), then commits + pushes your whole
+# workspace (code included) straight to the branch you're on — no PR, nothing
+# to merge. Run tools/sync_peers.sh to see everyone else's.
 #
 # if __name__ == "__main__":
 #     from framework import submit

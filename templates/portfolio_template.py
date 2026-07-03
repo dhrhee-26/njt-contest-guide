@@ -92,7 +92,8 @@ if __name__ == "__main__":
 
 # ─── (Optional) Submit ────────────────────────────────────────────────────────
 # When you're happy with the portfolio, uncomment to push it to your branch.
-# It submits exactly like an alpha — one folder, one PR.
+# It submits exactly like an alpha — one folder, one commit, straight to your
+# branch. No PR, nothing to merge.
 #
 # if __name__ == "__main__":
 #     from framework import submit
