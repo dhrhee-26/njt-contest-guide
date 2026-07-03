@@ -12,7 +12,7 @@ Pick whichever pattern fits your idea:
                      (this file)
 
 Edit the line marked "← write your signal here" to plug in your own idea, then
-run the whole file (Shift+Enter in Jupyter, or `python my_first_order_book_alpha.py`).
+run the whole file (`python3 my_first_order_book_alpha.py`).
 
 Defaults shipped here:
   - asset:    BTC only (order_book is single-asset by contract)
@@ -119,8 +119,8 @@ DESCRIPTION = "One-line description — what signal is this?"
 
 
 # ─── Copy-paste runner ────────────────────────────────────────────────────────
-# Running the file directly (`python my_alpha.py`) or pasting the whole file
-# into a Jupyter cell triggers a backtest + inline NAV chart.
+# Running the file directly (`python3 my_alpha.py`) triggers a backtest +
+# NAV chart.
 
 if __name__ == "__main__":
     from framework import evaluate_alpha

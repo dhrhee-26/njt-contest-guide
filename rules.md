@@ -222,6 +222,6 @@ Each lives in its own folder → dash shows them all → you can see your own pr
 - [ ] Symbol names are lowercase with `usdt` suffix
 - [ ] `Dataset.load` called with `holdout_recent=False`
 - [ ] You did NOT call `.shift(1)` on weights yourself (engine handles it)
-- [ ] Running `python my_alpha.py` (or pasting it into a Jupyter cell) returns a valid `SimulationResult` — no `ruined=True`
+- [ ] Running `python3 my_alpha.py` returns a valid `SimulationResult` — no `ruined=True`
 - [ ] Even with all costs set to 0 (`buy_bp=0, sell_bp=0, slip_bp=0`), Sharpe is ≥ 0 (signal itself has meaning)
 - [ ] `strategy_id` doesn't collide with one of your existing folders

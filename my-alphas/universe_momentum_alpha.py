@@ -21,8 +21,8 @@ now does:
 The alpha itself: rank every liquid symbol by its LOOKBACK-day return, go long
 the top quintile and short the bottom quintile, dollar-neutral, gross 1×.
 
-Edit the line marked "← write your signal here". Run the whole file (Shift+Enter
-in Jupyter, or `python universe_momentum_alpha.py`).
+Edit the line marked "← write your signal here". Run the whole file
+(`python3 universe_momentum_alpha.py`).
 
 Needs the seed cache extracted (README §9) so the panel has data. margin_weight
 is the default contest kind; set KIND = "target_weight" to use the old

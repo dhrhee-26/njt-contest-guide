@@ -1,6 +1,6 @@
 # Setup Walkthrough — Step by Step
 
-This is the **detailed, beginner-friendly** version of setup. It assumes you've never used Docker before, you're not deeply familiar with the command line, and you'd like every step spelled out. Total time: about **30 minutes** the first time.
+This is the **detailed, beginner-friendly** version of setup. It assumes you're not deeply familiar with the command line and you'd like every step spelled out. Total time: about **20 minutes** the first time.
 
 If you already know what you're doing, the quick version is in [`README.md`](./README.md).
 
@@ -10,82 +10,49 @@ If you already know what you're doing, the quick version is in [`README.md`](./R
 
 You need:
 
-- A computer running **macOS** (Intel or Apple Silicon), **Windows 10/11**, or **Linux**
-- The admin password for your computer (you'll install one app)
+- A computer running **macOS**, **Windows 10/11**, or **Linux**
 - A **GitHub account** — sign up free at https://github.com if you don't have one
-- About **5 GB** of free disk space
-- A working internet connection (you'll download ~1 GB)
+- About **2 GB** of free disk space
+- A working internet connection
 - The **handle** the contest admin assigned you (e.g., "alice", "bob") — ask them if you don't know
+- **Python 3.13** — Part 1 below walks you through installing it if you don't have it
+- **A code editor** — VS Code (https://code.visualstudio.com/) is recommended, but use whatever you're comfortable with
 
-You do NOT need: Python installed, Anaconda, pip, virtualenv, an IDE, or anything Python-related. Everything Python-related lives inside the Docker container.
-
-> **Security — never paste credentials into a chat or AI assistant.** Nothing in this contest requires a GitHub Personal Access Token (PAT). The Docker image is on a **public** registry (`docker pull` works without `docker login`); the submissions repo is accessed via your own SSH key (set up in Part 3). If any guide, error message, or AI assistant (including ChatGPT, Claude, Cursor, Copilot, etc.) ever tells you to paste a PAT, a password, or the contents of `~/.ssh/id_ed25519` (the **private** key, no `.pub`) to debug something — **stop and message the admin instead**. If you have already pasted one, revoke it immediately at https://github.com/settings/tokens and tell the admin.
+> **Security — never paste credentials into a chat or AI assistant.** Nothing in this contest requires a GitHub Personal Access Token (PAT). Everything is public except the submissions repo, which you access via your own SSH key (set up in Part 3). If any guide, error message, or AI assistant (including ChatGPT, Claude, Cursor, Copilot, etc.) ever tells you to paste a PAT, a password, or the contents of `~/.ssh/id_ed25519` (the **private** key, no `.pub`) to debug something — **stop and message the admin instead**. If you have already pasted one, revoke it immediately at https://github.com/settings/tokens and tell the admin.
 
 ---
 
-## Part 1 — Install Docker Desktop (~10 minutes)
+## Part 1 — Install Python 3.13 (~5 minutes)
 
-Docker Desktop is the app that lets you run containers on your machine. Think of a container as a small, self-contained Linux box with everything pre-installed.
-
-### 1.1 Download
-
-Go to https://www.docker.com/products/docker-desktop/
-
-Click **Download Docker Desktop**. The button auto-detects your OS, but if not, pick:
-- **Mac with Apple Silicon (M1/M2/M3/M4)** if your Mac is from 2020 or later
-- **Mac with Intel chip** if your Mac is from before 2020
-- **Windows** if you're on Windows
-- **Linux** if you're on Linux (probably Ubuntu)
-
-Save the file to your Downloads folder.
-
-### 1.2 Install
-
-**On Mac:**
-1. Open the downloaded `.dmg` file (double-click it in Downloads)
-2. Drag the **Docker** icon to the **Applications** folder when prompted
-3. Open the Applications folder (Finder → Applications) and double-click **Docker**
-4. macOS will ask "Are you sure you want to open this app?" — click **Open**
-5. You may be asked to enter your computer password to install some system extensions — enter it
-6. Accept the Docker Subscription Service Agreement
-7. Skip the tutorial / sign-in screens (you can click "Skip" or "Continue without signing in")
-
-**On Windows:**
-1. Open the downloaded `.exe` installer
-2. Click through the installer (accept defaults)
-3. When asked, enable the **WSL 2** option
-4. After install, restart your computer when prompted
-5. After restart, Docker Desktop should start automatically. If not, open it from the Start menu
-
-**On Linux:**
-1. Follow the official instructions at https://docs.docker.com/desktop/install/linux-install/ — exact commands vary by distribution
-
-### 1.3 Verify Docker is running
-
-After Docker Desktop is installed and started:
-
-- **Mac**: look for the small **whale icon** 🐳 in the menu bar (top of screen). When the whale stops animating and looks steady, Docker is ready.
-- **Windows**: the same whale icon appears in the system tray (bottom right). Wait for it to stop animating.
-
-Then open a **Terminal** (see Part 2 below) and run:
+Check first whether you already have it:
 
 ```bash
-docker --version
+python3 --version
 ```
 
-You should see something like:
+If you see `Python 3.13.x` (any patch version), skip to **Part 2**. If you see an older version, or `command not found`, install 3.13:
 
-```
-Docker version 27.4.0, build bde2b89
-```
+**On Mac:**
+- If you have Homebrew: `brew install python@3.13`
+- Otherwise: download the macOS installer from https://www.python.org/downloads/ and run it
 
-If you see this, Docker is installed correctly. If you see "command not found" or "Cannot connect to the Docker daemon", check the Troubleshooting section at the bottom.
+**On Windows:**
+- Download the installer from https://www.python.org/downloads/ and run it. **Check the box "Add python.exe to PATH"** on the first screen — easy to miss, and everything below assumes it's checked.
+- Or, in PowerShell: `winget install Python.Python.3.13`
+
+**On Linux:**
+- Use your distro's package manager (e.g. `sudo apt install python3.13 python3.13-venv` on Ubuntu 24.04+), or https://www.python.org/downloads/ if your distro's version is older.
+
+Verify:
+```bash
+python3 --version    # or python3.13 --version if you have multiple versions installed
+```
 
 ---
 
 ## Part 2 — Open the Terminal
 
-The Terminal (a.k.a. shell, command line) is where you type commands. The Docker tutorials all use it.
+The Terminal (a.k.a. shell, command line) is where you type commands.
 
 **Mac:**
 - Press **Cmd + Space** → type "Terminal" → press **Enter**
@@ -106,7 +73,7 @@ The Terminal (a.k.a. shell, command line) is where you type commands. The Docker
 - If you make a typo, use **left arrow** to move around and **Delete/Backspace** to fix it
 - **Tab** auto-completes file/folder names — saves typing
 
-Keep this Terminal window open. You'll use it for several steps.
+Keep this Terminal window open. You'll use it for several steps, and you'll end up wanting a **second** Terminal tab/window once dash is running (Part 5) — Mac: `Cmd+T` for a new tab; Windows Terminal: `Ctrl+Shift+T`.
 
 ---
 
@@ -115,7 +82,7 @@ Keep this Terminal window open. You'll use it for several steps.
 You'll push your submissions through Git to GitHub. You need:
 1. Git installed (usually already there on Mac/Linux; needs install on Windows)
 2. Your identity configured (name + email)
-3. An **SSH key** registered with GitHub — used for both cloning your private submissions branch and pushing to it (from inside the container)
+3. An **SSH key** registered with GitHub — used for both cloning your private submissions branch and pushing to it
 
 ### 3.1 Check Git is installed
 
@@ -140,14 +107,6 @@ git config --global user.email "you@example.com"
 
 Nothing is printed if successful — that's normal.
 
-Verify the config file now exists as a regular file (this matters for Part 5 — see the note there):
-
-```bash
-test -f ~/.gitconfig && echo "ok: ~/.gitconfig is a file"
-```
-
-You should see `ok: ~/.gitconfig is a file`. If you see nothing, the two commands above didn't run — try them again.
-
 ### 3.3 Generate an SSH key
 
 First, check whether you already have one:
@@ -167,7 +126,7 @@ ssh-keygen -t ed25519 -C "you@example.com"
 Use the same email you used on GitHub. The command will ask three questions:
 
 1. **"Enter file in which to save the key"** — press **Enter** to accept the default (`~/.ssh/id_ed25519`)
-2. **"Enter passphrase"** — press **Enter** to leave empty (the container needs to use the key without prompting)
+2. **"Enter passphrase"** — press **Enter** to leave empty, or set one if you prefer (you'll type it once per Terminal session)
 3. **"Enter same passphrase again"** — press **Enter**
 
 You should see "Your identification has been saved in `~/.ssh/id_ed25519`".
@@ -225,11 +184,11 @@ That message — including "does not provide shell access" — means success. If
 
 ---
 
-## Part 4 — Get the contest files (~3 minutes)
+## Part 4 — Get the contest files + install the SDK (~5 minutes)
 
 ### 4.1 Clone this guide repo into `~/njt-contest`
 
-This repo contains the `docker-compose.yml`, all the documentation (including the file you're reading), the starter templates, and reference starter alphas under `my-alphas/`. Cloning it gives you everything in one shot.
+This repo contains all the documentation (including the file you're reading), the starter templates, and reference starter alphas under `my-alphas/`.
 
 ```bash
 git clone https://github.com/dhrhee-26/njt-contest-guide.git ~/njt-contest
@@ -237,8 +196,6 @@ cd ~/njt-contest
 ```
 
 The `~` symbol is shorthand for your home folder (`/Users/you` on Mac, `C:\Users\you` on Windows).
-
-After `cd`, your Terminal prompt should show `njt-contest` somewhere (e.g., `you@Mac njt-contest %`). This means you're inside that folder.
 
 Verify the contents:
 
@@ -248,36 +205,69 @@ ls
 
 Expected (in some order):
 ```
-README.md           docker-compose.yml    setup.md
-alpha_anatomy.md    rules.md              templates    my-alphas
+README.md           setup.md
+alpha_anatomy.md    rules.md      templates    my-alphas
 ```
 
-### 4.2 Clone the submissions repo AS your workspace, and check out your branch
+### 4.2 Clone the submissions repo AS your workspace, and switch to your branch
 
 ```bash
 git clone git@github.com:dhrhee-26/njt-submissions.git workspace
 cd workspace
-git checkout interns/YOUR-HANDLE
+git switch interns/YOUR-HANDLE
 cd ..
 ```
 
 **Replace `YOUR-HANDLE`** with the handle the admin gave you (e.g., `alice`).
 
-(Cloning uses SSH because the submissions repo is private. Your SSH key from Part 3 handles the auth — no password prompt.)
+Use **`git switch`**, not `git checkout` — `main` already has a real `interns/YOUR-HANDLE/` folder in it (from earlier submissions), which makes plain `git checkout interns/YOUR-HANDLE` ambiguous ("branch or file path?"). `switch` only ever means "branch."
 
-If `git checkout interns/YOUR-HANDLE` says *"pathspec did not match"*, the admin hasn't created your branch yet — ask them to create `interns/YOUR-HANDLE` on `dhrhee-26/njt-submissions`.
+If `git switch interns/YOUR-HANDLE` says *"invalid reference"* or similar, the admin hasn't created your branch yet — ask them to create `interns/YOUR-HANDLE` on `dhrhee-26/njt-submissions`.
 
-This `workspace/` folder — checked out on **your** branch — is where everything happens from now on: your alpha code, your notebooks, and (once you submit) your results. It's a normal git repo you can `git add` / `git commit` / `git push` like any other; `submit()` just automates that from inside Jupyter.
+This `workspace/` folder — checked out on **your** branch — is where everything happens from now on: your alpha code, your agent code, and (once you submit) your results. It's a normal git repo you can `git add` / `git commit` / `git push` like any other; `submit()` just automates that for you.
 
 ### 4.3 Copy the starter alphas into your workspace
 
 ```bash
-cp my-alphas/my_first_alpha.py my-alphas/my_first_order_book_alpha.py workspace/
+cp my-alphas/*.py workspace/
 ```
 
-Copies the guide's two starter alphas (one per pattern) into your workspace, so they show up in Jupyter Lab in Part 6. You can also just write a file from scratch instead — nothing depends on these being there.
+Copies the guide's starter alphas into your workspace. You can also just write a file from scratch instead — nothing depends on these being there.
 
-### 4.4 Verify the final layout
+### 4.4 Create a virtual environment and install the SDK
+
+A **virtual environment** (venv) keeps this project's Python packages separate from anything else on your machine.
+
+```bash
+cd ~/njt-contest
+python3 -m venv .venv
+```
+
+Activate it (you'll do this every time you open a new Terminal for this project — see Part 5):
+
+```bash
+# Mac / Linux
+source .venv/bin/activate
+
+# Windows (PowerShell)
+.venv\Scripts\Activate.ps1
+```
+
+Your prompt should now start with `(.venv)`. Install the SDK + dash:
+
+```bash
+pip install "njt-sdk @ git+https://github.com/dhrhee-26/njt-sdk.git" "njt-dash @ git+https://github.com/dhrhee-26/njt-dash.git"
+```
+
+This takes a minute or two (pulls in `pandas`, `polars`, `pyarrow`, `dash`, and a few others). Verify it worked:
+
+```bash
+python3 -c "from feeds import Dataset; from framework import submit; print('ok')"
+```
+
+Expect to see `ok`. If this fails, see Troubleshooting.
+
+### 4.5 Verify the final layout
 
 From inside `~/njt-contest`, run:
 
@@ -287,102 +277,74 @@ ls
 
 Expected (in some order):
 ```
-README.md           docker-compose.yml    my-alphas    setup.md
-alpha_anatomy.md    rules.md              templates    workspace
+README.md           setup.md      .venv
+alpha_anatomy.md    rules.md      templates    my-alphas    workspace
 ```
 
 If all of those are there, Part 4 is done.
 
 ---
 
-## Part 5 — Start the container (~5 minutes for the first time)
+## Part 5 — Run dash (~1 minute)
 
-> **Before you run this**: make sure you completed **Part 3.2** (`git config --global user.name/email …`). The container mounts your host's `~/.gitconfig` so that `git` inside the container shares your identity. If that file does not exist when you run `docker compose up`, Docker silently creates `~/.gitconfig` as an **empty directory**, which then breaks `git` both on the host and in the container. If you skipped Part 3.2, do it now — otherwise see the matching row in Troubleshooting to recover.
-
-From `~/njt-contest`:
+Open a **second** Terminal tab/window (Part 2's tip), and in it:
 
 ```bash
-docker compose up -d
+cd ~/njt-contest
+source .venv/bin/activate          # Windows: .venv\Scripts\Activate.ps1
+njt-dash --submissions workspace
 ```
 
-**What happens:**
-- The first time, Docker downloads the ~1 GB image. You'll see lines like "Pulling njt", progress bars, "Pull complete" messages. Expect ~3-5 minutes depending on your internet.
-- After the pull, Docker starts the container in the background. The prompt returns when it's ready.
-
-**Verify the container is running:**
-
-```bash
-docker compose ps
-```
-
-Expected: a line that shows `njt` with status `Up` or `running`.
+This starts dash and keeps running in this Terminal tab (leave it open — this is your "server" tab). You should see:
 
 ```
-NAME    IMAGE                                       STATUS              PORTS
-njt     ghcr.io/dhrhee-26/njt-dash:main         Up 30 seconds       0.0.0.0:8050->8050/tcp, 0.0.0.0:8888->8888/tcp
+Dash is running on http://127.0.0.1:8050/
 ```
 
-If `STATUS` says `Exited` or `Restarting`, something went wrong. See Troubleshooting.
+Open http://localhost:8050 in your browser — you should see the dash UI.
 
-**Open the two web interfaces:**
-
-In your browser, open these two URLs in **separate tabs**:
-
-- http://localhost:8888 — **Jupyter Lab** (where you write alphas)
-- http://localhost:8050 — **dash UI** (where results are compared)
-
-Both pages should load within ~5-10 seconds. If they show "This site can't be reached" or similar, wait another 20 seconds for the container to finish starting, then try again.
+**Go back to your first Terminal tab** for everything else (Parts 6+) — that one is for editing/running your own code, this one just keeps dash alive in the background.
 
 ---
 
 ## Part 6 — Your first alpha (~10 minutes)
 
-You'll do this inside the **Jupyter Lab** browser tab (http://localhost:8888).
+### 6.1 Open the workspace in your editor
 
-### 6.1 Tour of Jupyter Lab
+```bash
+code ~/njt-contest/workspace     # VS Code — or open the folder manually in your editor of choice
+```
 
-When you first open it, you'll see:
-- **Left sidebar**: a file browser rooted at your `workspace/`. It shows the two starter alphas you copied in Part 4.3 — one per pattern:
-  - `my_first_alpha.py` — `target_weight` pattern (continuous portfolio reweights)
-  - `my_first_order_book_alpha.py` — `order_book` pattern (discrete entry/exit orders)
-- **Main area**: a Launcher with tiles like "Notebook", "Terminal", "File", etc.
-- **Top menu bar**: File / Edit / View / Run / Kernel / ...
+You'll see the starter alphas you copied in Part 4.3:
+- `my_first_alpha.py` — `target_weight` pattern (continuous portfolio reweights)
+- `my_first_order_book_alpha.py` — `order_book` pattern (discrete entry/exit orders)
 
 ### 6.2 Open the starter and skim it
 
-Double-click `my_first_alpha.py` in the left sidebar to open it. It's a short, complete example of a target_weight alpha — fetches BTC + ETH daily close, computes a 10-day cross-sectional momentum signal, ranks and goes long/short.
+Open `my_first_alpha.py`. It's a short, complete example of a target_weight alpha — fetches BTC + ETH daily close, computes a 10-day cross-sectional momentum signal, ranks and goes long/short.
 
-The walkthrough below uses `my_first_alpha.py`, but everything works identically for `my_first_order_book_alpha.py` if you'd rather start from the event-driven pattern — open that file instead.
+The walkthrough below uses `my_first_alpha.py`, but everything works identically for `my_first_order_book_alpha.py` if you'd rather start from the event-driven pattern.
 
-(Want to restart from the canonical template? From a host terminal: `cp ~/njt-contest/templates/target_weight_template.py ~/njt-contest/workspace/my_first_alpha.py` — or `templates/order_book_template.py` over `my_first_order_book_alpha.py`.)
+(Want to restart from the canonical template? `cp ~/njt-contest/templates/target_weight_template.py ~/njt-contest/workspace/my_first_alpha.py` — or `templates/order_book_template.py` over `my_first_order_book_alpha.py`.)
 
-### 6.3 Create a notebook to run it
+### 6.3 Run it
 
-1. Click **File → New → Notebook** in the top menu
-2. When asked which kernel, pick **Python 3** (the default)
-3. A blank notebook opens with one empty cell
-4. **Save** it: File → Save Notebook As → type `try_it.ipynb` → Save
+Back in your **first** Terminal tab (not the one running dash):
 
-### 6.4 Run the example alpha
-
-In the empty cell, paste:
-
-```python
-%load my_first_alpha.py
+```bash
+cd ~/njt-contest/workspace
+source ../.venv/bin/activate       # if this tab doesn't already have it active
+python3 my_first_alpha.py
 ```
-
-Press **Shift + Enter** (this means "run the cell"). The cell will be replaced with the entire contents of `my_first_alpha.py` (preceded by a `# %load` comment).
-
-Press **Shift + Enter** again to run the code.
 
 The first run downloads daily-close data for BTC and ETH from Binance Vision (~1 minute on first invocation, cached afterwards). When it finishes you should see:
 1. A printed line like `SimulationResult(return=+27.82%, sharpe=+0.60, ...)`
 2. A **Summary** block listing 20 metrics
-3. An interactive NAV chart that you can zoom and hover on
+3. A NAV chart (the starter calls `nav_fig(res).show()`, which opens it in your browser)
 
 Congratulations — you've just run your first backtest.
 
-### 6.5 Now modify the signal
+### 6.4 Now modify the signal
 
 Find the line with the comment `← write your signal here` (it's inside the `Alpha.get()` method). It looks like:
 
@@ -392,17 +354,78 @@ Find the line with the comment `← write your signal here` (it's inside the `Al
         signal = close.pct_change(LOOKBACK)
 ```
 
-Try changing `LOOKBACK = 10` (defined at the top of the file) to a different value like `LOOKBACK = 60`. Re-run the cell with Shift+Enter. The result should change.
+Try changing `LOOKBACK = 10` (defined at the top of the file) to a different value like `LOOKBACK = 60`. Save, then re-run:
 
-This is the basic loop: edit signal → Shift+Enter → see new result → iterate.
+```bash
+python3 my_first_alpha.py
+```
+
+This is the basic loop: **edit signal → save → `python3 <file>` → read the result → iterate.** No notebook, no container — just a Python file you run.
 
 Once you're happy with momentum and want a richer cross-section, expand `SYMBOLS` to the full 9 majors listed in `~/njt-contest/rules.md`.
+
+### 6.5 Write your own strategy from scratch
+
+You don't have to edit the starter — a strategy is just a new `.py` file in `workspace/` with an `Alpha` class. Create `workspace/my_reversal_v1.py`:
+
+```python
+import pandas as pd
+from feeds import Dataset
+from framework.types import CleanData, Positions
+
+SYMBOLS = ["btcusdt", "ethusdt", "solusdt"]
+
+class Alpha:
+    def get(self):
+        # 1. Data — daily close per symbol, wide (date × symbol)
+        close = pd.concat(
+            {s: Dataset.load(f"binance.klines.um.{s}.1d",
+                             pandas=True, holdout_recent=False)["Close"]
+             for s in SYMBOLS},
+            axis=1,
+        ).dropna(how="any")
+
+        # 2. Signal — YOUR idea goes here (this one: 5-day mean reversion)
+        signal = -close.pct_change(5)
+
+        # 3. Position — rank cross-sectionally, long the top half / short the bottom
+        rank = signal.rank(axis=1, pct=True)
+        w = pd.DataFrame(0.0, index=close.index, columns=close.columns)
+        w[rank > 0.5]  = +0.5
+        w[rank <= 0.5] = -0.5
+        return Positions(weights=w), CleanData(frames={"close": close})
+
+NAME        = "5-day cross-sectional reversal"
+KIND        = "target_weight"
+PRESET      = "binance_um_perpetual"
+DESCRIPTION = "Long recent losers, short recent winners, dollar-neutral."
+
+if __name__ == "__main__":
+    from framework import evaluate_alpha
+    from backtest import run_backtest, nav_fig
+    bundle = evaluate_alpha({"alpha_cls": Alpha, "kind": KIND, "name": NAME, "preset": PRESET})
+    res = run_backtest(bundle, start="2021-01-01", end=None)
+    print(repr(res))
+    for k, v in res.summary().items():
+        print(f"  {k:24s} {v}")
+    nav_fig(res).show()
+```
+
+Run it the same way:
+
+```bash
+python3 my_reversal_v1.py
+```
+
+The three numbered blocks — **Data → Signal → Position** — are the whole contract. `get()` returns `(Positions, CleanData)` and the backtest engine does the rest (it applies the t-1 shift, so don't `.shift(1)` your weights yourself). Full contract details are in [`alpha_anatomy.md`](./alpha_anatomy.md); the copy-paste starters in `templates/` cover `order_book` and portfolio patterns too.
+
+That's the research loop: **write a signal → run → read Sharpe / drawdown / turnover → change the signal → run again.** When a version is worth keeping, submit it (Part 8) and compare it against your earlier versions and your peers in dash.
 
 ---
 
 ## Part 7 — Compare with built-in alphas in dash
 
-Open the **dash UI** tab in your browser: http://localhost:8050
+Go to the dash UI tab in your browser: http://localhost:8050 (started in Part 5).
 
 You'll see:
 - A **Strategies** dropdown on the upper-left
@@ -416,21 +439,19 @@ Click the Strategies dropdown. You'll see groups:
 
 Select one or two strategies, then click **RUN BACKTEST**. After a few seconds, NAV charts, drawdown, and a statistics table appear. Spend a few minutes exploring.
 
-After you submit your own alpha (next part), it appears under the **submission** group in this same dropdown — no waiting on anyone.
+After you submit your own alpha (next part), it appears under the **submission** group in this same dropdown — no waiting on anyone. Dash auto-polls the filesystem every 30 seconds, so it shows up on its own; refresh the browser tab if it's been a moment.
 
 ---
 
 ## Part 8 — Submit (your first attempt) (~2 minutes)
 
-When you have an alpha you're happy with, you submit it from one notebook cell.
-
-In the same `try_it.ipynb` notebook (or a new cell at the bottom):
+When you have an alpha you're happy with, add a submit call at the bottom of the file (or run it separately) — `my_first_alpha.py` already has one, commented out:
 
 ```python
 from framework import submit
 
 submit(
-    Alpha(),                           # the Alpha class from the cell above
+    Alpha(),
     strategy_id="my_first_alpha_v1",   # folder name on your branch (your choice)
     name="My First Alpha",             # human-readable label shown in dash
     preset="binance_um_perpetual",
@@ -438,16 +459,22 @@ submit(
 )
 ```
 
-`submit()` writes `positions.parquet` + `meta.json` under `interns/YOUR-HANDLE/my_first_alpha_v1/`, then `git add -A` (your **whole** workspace — the alpha file too, not just the results folder), commits, and pushes straight to the branch you're on (it must be `interns/YOUR-HANDLE` — that's what you checked out in Part 4.2).
+`submit()` writes `positions.parquet` + `meta.json` under `interns/YOUR-HANDLE/my_first_alpha_v1/`, then `git add -A` (your **whole** workspace — the alpha file too, not just the results folder), commits, and pushes straight to the branch you're on (it must be `interns/YOUR-HANDLE` — that's what you switched to in Part 4.2).
 
-Press Shift+Enter. After a few seconds, you should see something like:
+Run it:
+
+```bash
+python3 my_first_alpha.py
+```
+
+You should see something like:
 
 ```
 ✓ submitted: interns/YOUR-HANDLE/my_first_alpha_v1
   commit:    abc1234567  on interns/YOUR-HANDLE (pushed)
 ```
 
-That's it — nothing else to do. No PR, nobody to wait on for merge. Refresh http://localhost:8050 and your alpha is already in the **submission** group.
+That's it — nothing else to do. No PR, nobody to wait on for merge. Restart dash (Part 7's note) and your alpha is in the **submission** group.
 
 ### Submitting again later
 
@@ -470,31 +497,26 @@ cd ~/njt-contest/workspace
 ./tools/sync_peers.sh alice bob    # or just specific handles
 ```
 
-This checks out each peer's full branch under `workspace/peers/<peer>/` (their code — agent, notebooks, everything) and regenerates `universe.json`. Refresh http://localhost:8050 — their alphas now show up in the **submission** group too. Open `peers/<peer>/` in Jupyter Lab's file browser to read their actual code. Re-run the script any time to pick up new pushes.
+This checks out each peer's full branch under `workspace/peers/<peer>/` (their code — everything) and regenerates `universe.json`. Restart dash (Part 7's note) — their alphas now show up in the **submission** group too. Open `peers/<peer>/` in your editor to read their actual code. Re-run the script any time to pick up new pushes.
 
 ---
 
 ## Part 10 — Daily routine
 
-Once setup is done, your daily workflow is just:
+Once setup is done, your daily workflow is:
 
 ```bash
-# Start of day
-cd ~/njt-contest
-docker compose up -d
-# Open browser at http://localhost:8888 and http://localhost:8050
+# Terminal tab 1 — dash, leave running
+cd ~/njt-contest && source .venv/bin/activate && njt-dash --submissions workspace
 
-# Iterate on your alpha in Jupyter Lab...
-# Submit via a cell when ready (Part 8 pattern)...
-
-# See peers' latest work (optional, any time)
-cd workspace && ./tools/sync_peers.sh && cd ..
-
-# End of day
-docker compose down
+# Terminal tab 2 — everything else
+cd ~/njt-contest/workspace && source ../.venv/bin/activate
+code .                              # or however you open your editor
+python3 my_alpha.py                 # run/iterate
+./tools/sync_peers.sh               # see peers' latest work (optional, any time)
 ```
 
-That's it.
+No containers to start or stop — just activate the venv (once per new Terminal tab) and go. `Ctrl+C` stops dash when you're done for the day.
 
 ---
 
@@ -502,25 +524,22 @@ That's it.
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| **Terminal**: `command not found: docker` | Docker Desktop isn't installed or not in PATH | Reinstall Docker Desktop; on Mac, sometimes you need to log out and back in |
-| `Cannot connect to the Docker daemon` | Docker Desktop isn't running | Open Docker Desktop, wait for the whale icon to stop animating, then retry |
-| Host `git` says `fatal: ... ~/.gitconfig: Is a directory`, or container says `unable to auto-detect email address` even though you set `user.email` | You ran `docker compose up` before Part 3.2, so Docker created `~/.gitconfig` as an empty folder instead of a file | `docker compose down`, then `rm -rf ~/.gitconfig`, then redo **Part 3.2** (`git config --global user.name/email …`), then `docker compose up -d`. Verify with `test -f ~/.gitconfig && echo ok` |
-| `docker compose up` says "port already in use" (8888 or 8050) | Another program is using that port | Run `docker compose down`. Find the offender: Mac/Linux `lsof -i :8888`, Windows `netstat -ano \| findstr 8888`. Stop that program. Try `up -d` again |
-| Browser at http://localhost:8888 says "This site can't be reached" | Container failed to start, or browser cached old result | Run `docker compose ps` — if STATUS isn't "Up", run `docker compose logs njt` to see why. If status is Up, wait 20 seconds, hard-refresh browser (Cmd+Shift+R) |
-| `submit()` says `you're on branch 'main', not interns/<handle>` | You cloned `njt-submissions` but didn't check out your branch (Part 4.2) | `cd ~/njt-contest/workspace && git checkout interns/YOUR-HANDLE`, then `docker compose down && docker compose up -d` |
-| `git checkout interns/YOUR-HANDLE` says `pathspec did not match` | The admin hasn't created your branch yet | Ask the admin to create `interns/YOUR-HANDLE` on `dhrhee-26/njt-submissions` |
+| `python3 --version` shows an old version (e.g. 3.9) even after installing 3.13 | Multiple Python versions installed, old one still first in PATH | Try `python3.13 --version` explicitly. Use `python3.13 -m venv .venv` in Part 4.4 if so, and re-activate. |
+| `pip install "njt-sdk @ git+..."` fails while building `pyarrow` or `polars` from source | Your platform/Python combo doesn't have a prebuilt wheel for that package version | Rare on Mac/Windows/Linux x86_64 or Apple Silicon with Python 3.13. Message the admin with the full error — likely needs a version pin adjustment. |
+| `git switch interns/YOUR-HANDLE` says `invalid reference` | The admin hasn't created your branch yet | Ask the admin to create `interns/YOUR-HANDLE` on `dhrhee-26/njt-submissions` |
 | `git clone git@github.com:...` says `Permission denied (publickey)` | SSH key isn't registered with GitHub | Revisit **Part 3.4** — make sure the contents of `~/.ssh/id_ed25519.pub` are pasted at https://github.com/settings/keys. Then `ssh -T git@github.com` should print "Hi `<your-username>`!" |
-| Container log: `ERROR — no SSH private key found under ~/.ssh/` | The host has no SSH key, so the container has nothing to push with | Run **Part 3.3** + **3.4** on the host, then `docker compose down && docker compose up -d` |
-| `submit()` says `not a git repository` | Container was started outside `~/njt-contest`, or `workspace/` wasn't cloned (mount path wrong) | `docker compose down`, confirm `~/njt-contest/workspace/.git` exists, `cd ~/njt-contest`, `docker compose up -d` |
+| `submit()` says `you're on branch 'main', not interns/<handle>` | You're not on your branch | `cd ~/njt-contest/workspace && git switch interns/YOUR-HANDLE` |
+| `submit()` says `not a git repository` | Running the script from somewhere other than inside `workspace/`, or `workspace/` wasn't cloned | Confirm `~/njt-contest/workspace/.git` exists; run scripts with `cd ~/njt-contest/workspace` first |
+| dash doesn't show a submission you just pushed | dash auto-polls every 30s — might just not have ticked yet | Wait ~30s and refresh the browser tab. If it's been minutes, check `submit()` actually printed `pushed` |
 | `tools/sync_peers.sh` shows a peer with "no commits yet" | That intern hasn't submitted anything yet | Nothing to fix — re-run the script later |
-| `Alpha is not defined` in the submission cell | You ran the submission cell without first running the cell that defines `Alpha` | Run the alpha definition cell first, then the submission cell |
-| Docker image download is very slow | Slow network, or peak hours | Be patient on the first pull. Subsequent updates are much smaller |
-| `docker compose pull` says "denied: pulling from public registry forbidden" | Some corporate networks block GHCR | Try from a different network, or ask the admin |
+| `(.venv)` doesn't appear in your prompt after `source .venv/bin/activate` | You're in the wrong folder, or on Windows used the wrong activation command | Confirm you're in `~/njt-contest` (`.venv` should be a sibling folder); Windows PowerShell needs `.venv\Scripts\Activate.ps1`, not the Mac/Linux `source` form |
+| PowerShell says running scripts is disabled, when activating the venv | Windows' default execution policy blocks `.ps1` scripts | Run PowerShell as Administrator once: `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`, then retry |
+| `Alpha is not defined` | Running a snippet that references `Alpha` without it being defined in the same file/session | Make sure the class definition and the code that uses it are in the same script, in order |
 
 If you hit anything not in the table, post in **#njt-contest** or message the admin with:
-1. What you were doing (which command / cell)
+1. What you were doing (which command)
 2. The full error message (copy-paste it, don't paraphrase)
-3. The output of `docker compose ps` and `docker compose logs njt --tail 30`
+3. Your OS and `python3 --version`
 
 **Do not paste GitHub tokens, passwords, or SSH private keys** into any chat, issue, or AI assistant while debugging. None of the contest tooling needs them — see the security note at the top of this document. If a suggested fix asks you to, route it past the admin first.
 

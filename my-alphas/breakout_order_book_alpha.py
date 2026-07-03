@@ -10,8 +10,8 @@ The alpha: a Donchian channel breakout. Go long when the close makes a new
 ENTRY-day high; exit to flat when it makes a new EXIT-day low. Trades only on
 those flips — exactly the discrete entry/exit logic order_book is built for.
 
-Edit the line marked "← write your signal here". Run the whole file (Shift+Enter
-in Jupyter, or `python breakout_order_book_alpha.py`). For contest W2 (order_book,
+Edit the line marked "← write your signal here". Run the whole file
+(`python3 breakout_order_book_alpha.py`). For contest W2 (order_book,
 1d). Needs the seed cache extracted (README §9).
 """
 from __future__ import annotations

@@ -84,8 +84,8 @@ DESCRIPTION = "One-line description — what signal is this?"
 
 
 # ─── Copy-paste runner ────────────────────────────────────────────────────────
-# Running the file directly (`python my_alpha.py`) or pasting the whole file
-# into a Jupyter cell triggers a backtest + inline NAV chart. dash's registry
+# Running the file directly (`python3 my_alpha.py`) triggers a backtest +
+# NAV chart. dash's registry
 # imports the file with __name__ != "__main__", so this block stays silent
 # when the alpha is being auto-discovered.
 

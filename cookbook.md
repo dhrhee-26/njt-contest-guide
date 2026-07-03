@@ -3,8 +3,9 @@
 *Last updated: 2026-06-02*
 
 A practical, example-driven companion to `README.md`, `rules.md`, and
-`alpha_anatomy.md`. Everything here is copy-paste runnable from a Jupyter cell
-(http://localhost:8888). It answers the questions that come up most:
+`alpha_anatomy.md`. Everything here is copy-paste runnable from a Python
+script (or the `python3` REPL) in your local environment — see `README.md`
+§1 for setup. It answers the questions that come up most:
 
 0. [One-time setup — clone your branch as `workspace/`](#0-one-time-setup)
 1. [Loading & updating data — every `Dataset.load` parameter](#1-loading--updating-data)
@@ -19,22 +20,21 @@ A practical, example-driven companion to `README.md`, `rules.md`, and
 
 ## 0. One-time setup
 
-Two clones, then you're done:
-
 ```bash
 git clone https://github.com/dhrhee-26/njt-contest-guide.git ~/njt-contest
 cd ~/njt-contest
 git clone git@github.com:dhrhee-26/njt-submissions.git workspace
-cd workspace && git checkout interns/<your-handle> && cd ..
-docker compose up -d                                       # http://localhost:8888 + :8050
+cd workspace && git switch interns/<your-handle> && cd ..
+python3 -m venv .venv && source .venv/bin/activate    # Windows: .venv\Scripts\Activate.ps1
+pip install "njt-sdk @ git+https://github.com/dhrhee-26/njt-sdk.git" "njt-dash @ git+https://github.com/dhrhee-26/njt-dash.git"
+njt-dash --submissions workspace                       # separate Terminal tab, http://localhost:8050
 ```
 
-`workspace/` — checked out on **your** branch — is mounted as `/workspace` and is
-where everything happens: your alpha code, notebooks, and (via `submit()`)
-your results. There's no `.env`, no handle indirection — `submit()` reads your
+`workspace/` — checked out on **your** branch — is where everything happens:
+your alpha code, and (via `submit()`) your results. `submit()` reads your
 handle straight off the branch you're on.
 
-- Wrong branch? `cd workspace && git checkout interns/<your-handle>`, then `docker compose down && docker compose up -d`.
+- Wrong branch? `cd workspace && git switch interns/<your-handle>`.
 - To see other interns' work, run `workspace/tools/sync_peers.sh` (see §7).
 
 ---
@@ -97,7 +97,7 @@ btc = Dataset.load("binance.klines.um.btcusdt.1d", pandas=True, holdout_recent=F
 btc[["Open", "High", "Low", "Close", "Volume"]].tail()
 ```
 
-**Bring your cache up to date** (from a Jupyter cell — the Data Monitor tab is view-only):
+**Bring your cache up to date** (a script — the Data Monitor tab is view-only):
 ```python
 from feeds import update_cache, fetch_all_1d
 update_cache()      # incrementally append new days to EVERY cached symbol (parallel). Returns (ok, failed).
@@ -395,21 +395,20 @@ Full contract and more depth: `alpha_anatomy.md`. Starters: `templates/`.
 ## 5. Viewing data in the dash
 
 Open the dash (http://localhost:8050) and click the **Data Monitor** tab. It's a
-**read-only inventory of what's cached on your machine** (`~/njt-contest/data-cache/feeds/`):
+**read-only inventory of what's cached on your machine** (`~/.cache/feeds/`):
 
 - **Status** — `OK` = cached, `—` = not fetched yet.
 - **Name** — human asset name, e.g. `Bitcoin (BTC)` (see §6).
 - **identity / intervals / rows / first / last / size** — which intervals you have for that symbol, the row count, and the date range.
 
 Two things to know:
-- The table is a **snapshot taken when the container booted.** If you fetch or
-  extract data **after** the dash is already up, click **Refresh** on the Data
-  Monitor (or `docker compose restart njt`) to re-scan — otherwise it still shows
-  the boot-time state.
+- The table is a **snapshot taken when dash started.** If you fetch or
+  extract data **after** dash is already up, click **Refresh** on the Data
+  Monitor to re-scan — otherwise it still shows the startup-time state.
 - The Data Monitor **only views** cache status — it never downloads. Manage data
-  from a Jupyter cell (`update_cache()`, `fetch_all_1d()`, `Dataset.load(update=…)`).
+  from a script (`update_cache()`, `fetch_all_1d()`, `Dataset.load(update=…)`).
 
-The real proof your data is loaded is in Jupyter:
+The real proof your data is loaded:
 ```python
 Dataset.load("binance.klines.um.Close.1d", pandas=True, holdout_recent=False).shape  # (T, ~500+)
 ```
@@ -449,8 +448,7 @@ physically in your `workspace/` checkout:
    This checks out each peer's branch read-only and symlinks their
    `interns/<peer>/` folder in next to your own, then regenerates
    `universe.json`. The dropdown auto-refreshes within ~30s (it polls for new
-   submissions); if a freshly-synced alpha doesn't show, `docker compose
-   restart njt` and refresh the tab.
+   submissions); just refresh the tab after a moment.
 
 Strategies are grouped in the dropdown — built-in **benchmarks** (BTC buy-hold,
 MAJORS_9 equal-weight, …) vs. **submissions** (`<handle> · <name>`). Pick two and
@@ -459,6 +457,6 @@ against a benchmark or a peer's.
 
 Their code is right there too, not just results — `sync_peers.sh` checks out
 each peer's full branch under `workspace/peers/<peer>/` (agent code,
-notebooks, everything), and `workspace/interns/<peer>/` is just a symlink into
+scripts, everything), and `workspace/interns/<peer>/` is just a symlink into
 that checkout's results folder so dash finds it. Open
-`peers/<peer>/` in Jupyter Lab's file browser to read their actual code.
+`peers/<peer>/` in your editor to read their actual code.

@@ -27,8 +27,7 @@ This is a price-PnL backtest (the engine prices fills off `close`); the funding
 rate is used purely as the *timing signal*, not as a carry/income stream.
 
 Edit the line marked "← write your signal here" to plug in your own funding
-idea, then run the whole file (Shift+Enter in Jupyter, or
-`python funding_order_book_alpha.py`).
+idea, then run the whole file (`python3 funding_order_book_alpha.py`).
 
 Defaults shipped here:
   - asset:    BTC only (order_book is single-asset by contract)
@@ -148,8 +147,8 @@ DESCRIPTION = "Single-asset state machine: long when 7d avg funding is positive 
 
 
 # ─── Copy-paste runner ────────────────────────────────────────────────────────
-# Running the file directly (`python funding_order_book_alpha.py`) or pasting the
-# whole file into a Jupyter cell triggers a backtest + inline NAV chart.
+# Running the file directly (`python3 funding_order_book_alpha.py`) triggers a
+# backtest + NAV chart.
 
 if __name__ == "__main__":
     from framework import evaluate_alpha

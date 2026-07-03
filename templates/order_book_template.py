@@ -107,8 +107,8 @@ DESCRIPTION = "One-line description — what signal is this?"
 
 
 # ─── Copy-paste runner ────────────────────────────────────────────────────────
-# Running the file directly (`python my_alpha.py`) or pasting the whole file
-# into a Jupyter cell triggers a backtest + inline NAV chart.
+# Running the file directly (`python3 my_alpha.py`) triggers a backtest +
+# NAV chart.
 
 if __name__ == "__main__":
     from framework import evaluate_alpha

@@ -2,8 +2,8 @@
 Your starter alpha — runnable out of the box.
 
 Edit the line marked "← write your signal here" to plug in your own idea, then
-run the whole file (Shift+Enter in Jupyter, or `python my_first_alpha.py` from
-a terminal). You'll get a SimulationResult printed + an interactive NAV chart.
+run the whole file (`python3 my_first_alpha.py` from a terminal). You'll get a
+SimulationResult printed + an interactive NAV chart.
 
 Defaults shipped here:
   - kind:      margin_weight — your weights are traded *statefully* (real
@@ -87,8 +87,8 @@ DESCRIPTION = "One-line description — what signal is this?"
 
 
 # ─── Copy-paste runner ────────────────────────────────────────────────────────
-# Running the file directly (`python my_alpha.py`) or pasting the whole file
-# into a Jupyter cell triggers a backtest + inline NAV chart. dash's registry
+# Running the file directly (`python3 my_alpha.py`) triggers a backtest +
+# NAV chart. dash's registry
 # imports the file with __name__ != "__main__", so this block stays silent
 # when the alpha is being auto-discovered.
 

@@ -57,10 +57,10 @@ DESCRIPTION = "One-line description — how are the alphas combined?"
 
 
 # ─── Copy-paste runner ────────────────────────────────────────────────────────
-# Running the file directly (`python my_portfolio.py`) or pasting it into a
-# Jupyter cell triggers a backtest + inline NAV chart. It also prints the
-# correlation between your alphas (orthogonality) and a side-by-side comparison
-# of the portfolio vs each individual alpha — useful for your report.
+# Running the file directly (`python3 my_portfolio.py`) triggers a backtest +
+# NAV chart. It also prints the correlation between your alphas
+# (orthogonality) and a side-by-side comparison of the portfolio vs each
+# individual alpha — useful for your report.
 
 if __name__ == "__main__":
     from framework import evaluate_alpha
