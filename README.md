@@ -378,5 +378,6 @@ Details → [`rules.md`](./rules.md). The big ones:
 | [`rules.md`](./rules.md) | Contest rules, per-week constraints, gotcha checklist |
 | [`templates/target_weight_template.py`](./templates/target_weight_template.py) | Cross-sectional alpha starter |
 | [`templates/order_book_template.py`](./templates/order_book_template.py) | Event-driven alpha starter |
+| [`AGENT_KICKOFF.md`](./AGENT_KICKOFF.md) | Phase 2 (W6+) — getting started with `njt-agent-phase2`, the automatic alpha-generation agent |
 
 Questions → admin or #njt-contest channel.
