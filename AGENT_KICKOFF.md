@@ -2,7 +2,8 @@
 
 Phase 2's real mission starts here: `njt-agent-phase2` is your starting scaffold for an LLM
 agent that writes alphas. It's not a blank repo — it ships a working, deliberately minimal
-baseline. Your job for W6–W9 is to make it good.
+baseline. Your job between now and 7/30 is to make it good (see "This week" below for the
+current schedule).
 
 ---
 
@@ -50,7 +51,7 @@ as a local submission. Look at:
 
 The baseline deliberately has no exploration, no OOS check, no multi-agent fleet — one agent,
 one naive alpha, in-sample only. That's the floor. Building real research rigor on top — the
-way you'd design a fleet, gate ideas, check for overfitting — is the actual W6 deliverable.
+way you'd design a fleet, gate ideas, check for overfitting — is the actual deliverable.
 
 ## Getting it onto your branch
 
@@ -70,13 +71,16 @@ cohort.
 The design intent is: your agent gets run against a held-out topic set and period you don't see,
 scored on risk-adjusted return, a verification-battery pass rate, and efficiency. **That harness
 isn't built yet** — treat "build something that would hold up out-of-sample" as the goal for now,
-and expect more detail on the actual grading mechanics as W6 progresses.
+and expect more detail on the actual grading mechanics as your workflow progresses.
 
-## This week (W6, 7/6–7/10)
+## Schedule
 
-- Get v1 running end to end.
-- Generate 100 alphas.
-- Write up your architecture (prompt design, verification loop, result management) — this goes
-  in your weekly report.
+- **By 7/23** — get the baseline running end to end, then build and refine your own agent
+  workflow on top of it: generate a real batch of alphas, add automatic **portfolio**
+  generation, and keep a running writeup of your architecture (prompt design, verification loop,
+  result management) as you iterate.
+- **By 7/30** — **"Can LLM replace Quant researchers?"**: a free-form report comparing your
+  Phase 1 human-designed alphas against what your agent produced, plus a **live demo of your
+  final workflow**.
 
 Questions → this channel or DM me.
