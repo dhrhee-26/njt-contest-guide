@@ -26,8 +26,8 @@ defaults still assume a container):
 export NJT_SUBMISSIONS_ROOT=/absolute/path/to/njt-contest/workspace   # your njt-submissions clone
 export NJT_HANDLE=<your-handle>
 ```
-Skip this and your submission either fails (no `/submissions` locally) or lands under the wrong
-handle.
+Skip this and the run stops right away at the submit step with a message telling you to export
+them — there's no longer a silent fallback to `/submissions` or the literal handle `local`.
 
 ## Try it
 
@@ -39,8 +39,10 @@ This runs the whole baseline: an `alpha-developer` sub-agent loads cached data, 
 naive `margin_weight` alpha for the topic hypothesis, in-sample backtests it, and writes it out
 as a local submission. Look at:
 - `../njt-agent-phase2-results/demo/artifacts/build/am.py` — the alpha it wrote
-- dash (`njt-dash --submissions workspace`) — the submission shows up there once you push it
-  (see "Getting it onto your branch" below)
+- dash (`njt-dash --submissions workspace`, the local CLI in your venv — **not** the Phase 1
+  Docker `njt` container on `:8050`) — the alpha shows up as soon as the agent writes it, since
+  dash reads your local `workspace/` tree; pushing it (see "Getting it onto your branch" below)
+  is only what makes your peers see it
 
 ## What's frozen, what's yours
 
